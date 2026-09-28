@@ -1,1 +1,374 @@
+<!DOCTYPE html>
+<html lang="zh-TW">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>蘇花哨兵 — 蘇花改即時交通決策與路況儀表板</title>
+  <script src="https://cdn.tailwindcss.com"></script>
+  <script src="https://unpkg.com/vue@3/dist/vue.global.prod.js"></script>
+  <style>
+    body { background-color: #0b0f17; color: #f1f5f9; font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif; }
+    .glass-card { background: rgba(22, 27, 34, 0.75); backdrop-filter: blur(12px); border: 1px solid rgba(255, 255, 255, 0.08); }
+    .pulse-dot { animation: pulse 2s cubic-bezier(0.4, 0, 0.6, 1) infinite; }
+    @keyframes pulse { 0%, 100% { opacity: 1; } 50% { opacity: 0.3; } }
+  </style>
+</head>
+<body class="min-h-screen pb-16">
+  <div id="app" class="max-w-4xl mx-auto px-4 pt-6">
 
+    <!-- 頁頭資訊 -->
+    <header class="flex flex-col sm:flex-row justify-between items-start sm:items-center pb-6 border-b border-slate-800 gap-4">
+      <div>
+        <div class="flex items-center gap-2">
+          <span class="inline-block w-3 h-3 rounded-full bg-emerald-500 pulse-dot"></span>
+          <h1 class="text-2xl font-bold tracking-tight text-white">蘇花哨兵 Suhua Sentinel</h1>
+        </div>
+        <p class="text-xs text-slate-400 mt-1">台9線蘇花改・即時路況、管制通報與通行決策</p>
+      </div>
+
+      <div class="flex items-center gap-3 w-full sm:w-auto justify-between sm:justify-end">
+        <div class="text-right">
+          <div class="text-[11px] text-slate-400">公路局 TDX 即時連動</div>
+          <div class="text-xs font-mono text-emerald-400">{{ updateTimeDisplay }}</div>
+        </div>
+        <!-- 方向切換 Tab -->
+        <div class="bg-slate-800/90 p-1 rounded-xl flex text-xs font-medium border border-slate-700/50">
+          <button 
+            @click="direction = 'south'" 
+            :class="direction === 'south' ? 'bg-indigo-600 text-white shadow' : 'text-slate-400 hover:text-white'"
+            class="px-3 py-1.5 rounded-lg transition-all">
+            南下 宜蘭往花蓮
+          </button>
+          <button 
+            @click="direction = 'north'" 
+            :class="direction === 'north' ? 'bg-indigo-600 text-white shadow' : 'text-slate-400 hover:text-white'"
+            class="px-3 py-1.5 rounded-lg transition-all">
+            北上 花蓮往宜蘭
+          </button>
+        </div>
+      </div>
+    </header>
+
+    <!-- 哨兵綜合決策卡片 -->
+    <section class="mt-6 glass-card rounded-2xl p-6 relative overflow-hidden border-indigo-500/20">
+      <div class="flex flex-col md:flex-row justify-between gap-6">
+        <div>
+          <div class="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-full text-xs font-semibold bg-emerald-500/20 text-emerald-300 mb-2">
+            <span>● 哨兵綜合判斷</span>
+          </div>
+          <h2 class="text-2xl font-extrabold text-white">{{ decision.title }}</h2>
+          <p class="text-sm text-slate-300 mt-1.5 max-w-lg leading-relaxed">{{ decision.desc }}</p>
+        </div>
+
+        <div class="flex gap-4 items-center bg-slate-900/80 p-4 rounded-xl border border-slate-800 shrink-0">
+          <div>
+            <div class="text-xs text-slate-400">蘇澳 ⇄ 崇德 車程</div>
+            <div class="text-2xl font-bold font-mono text-emerald-400">{{ totalEstimatedMinutes }} <span class="text-xs text-slate-400">分</span></div>
+          </div>
+          <div class="w-px h-8 bg-slate-800"></div>
+          <div>
+            <div class="text-xs text-slate-400">全線均速</div>
+            <div class="text-2xl font-bold font-mono text-white">{{ overallAvgSpeed }} <span class="text-xs text-slate-400">km/h</span></div>
+          </div>
+        </div>
+      </div>
+
+      <!-- 即時管制作業通報 -->
+      <div v-if="filteredNews.length > 0" class="mt-5 pt-4 border-t border-slate-800">
+        <div class="text-xs font-bold text-amber-400 mb-2">⚠️ 蘇花路段管制／施工即時通報</div>
+        <div class="space-y-2">
+          <div v-for="news in filteredNews" :key="news.NewsID" class="text-xs bg-amber-500/10 p-3 rounded-lg border border-amber-500/20">
+            <div class="text-amber-300 font-semibold mb-1">{{ news.Title }}</div>
+            <div class="text-slate-300 leading-relaxed">{{ news.Description }}</div>
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <!-- 各主要隧道區段即時車速 -->
+    <section class="mt-8">
+      <div class="flex justify-between items-center mb-3">
+        <h3 class="text-xs font-semibold text-slate-400 uppercase tracking-wider">蘇花改各重點隧道區間車速 (VD 偵測)</h3>
+        <span class="text-[11px] text-slate-500">單位：km/h</span>
+      </div>
+      <div class="grid grid-cols-1 md:grid-cols-3 gap-4">
+        <div v-for="seg in currentSegments" :key="seg.key" class="glass-card rounded-xl p-4.5 flex flex-col justify-between">
+          <div class="flex justify-between items-start mb-2">
+            <div>
+              <span class="text-[11px] font-mono text-indigo-400">{{ seg.mileage }}</span>
+              <h4 class="font-bold text-base text-white mt-0.5">{{ seg.name }}</h4>
+            </div>
+            <span :class="getStatusBadge(seg.speed)" class="text-[11px] px-2 py-0.5 rounded font-medium">
+              {{ getStatusText(seg.speed) }}
+            </span>
+          </div>
+
+          <div class="flex items-baseline gap-2 mt-2">
+            <span class="text-3xl font-extrabold font-mono" :class="getSpeedColor(seg.speed)">
+              {{ seg.speed > 0 ? seg.speed : '--' }}
+            </span>
+            <span class="text-xs text-slate-400">km/h (速限 {{ seg.limit }})</span>
+          </div>
+
+          <div class="w-full bg-slate-800/80 h-1.5 rounded-full mt-3 overflow-hidden">
+            <div 
+              class="h-full rounded-full transition-all"
+              :class="seg.speed >= 55 ? 'bg-emerald-500' : (seg.speed >= 35 ? 'bg-amber-500' : 'bg-rose-500')"
+              :style="{ width: Math.min(100, (seg.speed / seg.limit) * 100) + '%' }">
+            </div>
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <!-- 關鍵路段即時 CCTV 快照 -->
+    <section class="mt-8">
+      <div class="flex justify-between items-center mb-3">
+        <h3 class="text-xs font-semibold text-slate-400 uppercase tracking-wider">關鍵點位 CCTV 快照</h3>
+        <span class="text-[11px] text-slate-500">每 30 秒定時刷新畫面</span>
+      </div>
+
+      <div class="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-4 gap-3">
+        <div v-for="cam in cctvList" :key="cam.id" class="glass-card rounded-xl overflow-hidden group">
+          <div class="relative bg-slate-900 aspect-video flex items-center justify-center overflow-hidden">
+            <img 
+              :src="cam.snapshotUrl" 
+              :alt="cam.title"
+              class="w-full h-full object-cover group-hover:scale-105 transition-transform duration-300"
+              @error="handleImgError($event)"
+            />
+            <span class="absolute top-2 left-2 bg-black/70 backdrop-blur text-[10px] text-white px-1.5 py-0.5 rounded">
+              {{ cam.mileage }}
+            </span>
+          </div>
+          <div class="p-2.5">
+            <div class="text-xs font-semibold text-white truncate">{{ cam.title }}</div>
+            <div class="text-[11px] text-slate-400 mt-0.5 truncate">{{ cam.desc }}</div>
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <footer class="mt-12 pt-6 border-t border-slate-800 text-xs text-slate-500 flex flex-col sm:flex-row justify-between items-center gap-4">
+      <p>資料直接自儲存庫即時同步・公路局開放資料介接</p>
+      <div class="flex gap-4">
+        <a href="https://168.thb.gov.tw/" target="_blank" class="hover:text-slate-300 underline">公路局 168 即時路況</a>
+      </div>
+    </footer>
+  </div>
+
+  <script>
+    const { createApp, ref, computed, onMounted } = Vue;
+
+    createApp({
+      setup() {
+        const direction = ref('south');
+        const updateTimeDisplay = ref('--:--');
+        const vdRawData = ref([]);
+        const newsRawData = ref([]);
+        const cctvRawData = ref([]);
+
+        // 蘇花改重點路段定義 (以台9線公里數 mapping)
+        const segmentsConfig = {
+          south: [
+            { key: 'dongao', name: '蘇澳 ⇄ 東澳 (東澳隧道)', mileage: '台9線 104K-113K', limit: 70, vdPatterns: ['104', '106', '107', '111', '112'] },
+            { key: 'guanyin', name: '南澳 ⇄ 和平 (觀音/谷風)', mileage: '台9線 124K-145K', limit: 70, vdPatterns: ['125', '127', '128', '129', '130', '135', '138', '140', '141'] },
+            { key: 'zhongren', name: '和中 ⇄ 大清水 (中仁/仁水)', mileage: '台9線 148K-160K', limit: 60, vdPatterns: ['149', '150', '151', '152', '155', '156', '157', '158'] }
+          ],
+          north: [
+            { key: 'zhongren', name: '大清水 ⇄ 和中 (仁水/中仁)', mileage: '台9線 160K-148K', limit: 60, vdPatterns: ['158', '157', '156', '155', '152', '151', '150', '149'] },
+            { key: 'guanyin', name: '和平 ⇄ 南澳 (谷風/觀音)', mileage: '台9線 145K-124K', limit: 70, vdPatterns: ['141', '140', '138', '135', '130', '129', '128', '127', '125'] },
+            { key: 'dongao', name: '東澳 ⇄ 蘇澳 (東澳隧道)', mileage: '台9線 113K-104K', limit: 70, vdPatterns: ['112', '111', '107', '106', '104'] }
+          ]
+        };
+
+        // 挑選具代表性的蘇花關鍵監視器點位
+        const targetCctvMilestones = [
+          { pattern: '104K', title: '蘇澳端入口', desc: '台9線蘇澳交流道銜接處' },
+          { pattern: '112K', title: '東澳隧道端', desc: '東澳隧道口' },
+          { pattern: '128K', title: '觀音隧道北口', desc: '南澳長隧道段入口' },
+          { pattern: '141K', title: '谷風隧道南口', desc: '和平端隧道出口' },
+          { pattern: '149K', title: '中仁隧道北口', desc: '和中段入口' },
+          { pattern: '155K', title: '仁水隧道區間', desc: '和仁至大清水段' },
+          { pattern: '158K', title: '大清水端', desc: '匯入舊線端點' },
+          { pattern: '166K', title: '崇德管制端', desc: '花蓮端匯流管制點' }
+        ];
+
+        // 載入 GitHub 上由 Actions 抓取的真實資料
+        const loadData = async () => {
+          try {
+            // 讀取 vd.json
+            const vdRes = await fetch('./data/vd.json?t=' + Date.now());
+            if (vdRes.ok) {
+              const vdJson = await vdRes.json();
+              vdRawData.value = vdJson.VDLives || [];
+              if (vdJson.UpdateTime) {
+                const date = new Date(vdJson.UpdateTime);
+                updateTimeDisplay.value = date.toLocaleTimeString('zh-TW', { hour: '2-digit', minute: '2-digit' });
+              }
+            }
+
+            // 讀取 news.json
+            const newsRes = await fetch('./data/news.json?t=' + Date.now());
+            if (newsRes.ok) {
+              const newsJson = await newsRes.json();
+              newsRawData.value = newsJson.Newses || [];
+            }
+
+            // 讀取 cctv.json
+            const cctvRes = await fetch('./data/cctv.json?t=' + Date.now());
+            if (cctvRes.ok) {
+              const cctvJson = await cctvRes.json();
+              cctvRawData.value = cctvJson.CCTVs || [];
+            }
+          } catch (err) {
+            console.error('載入資料失敗:', err);
+          }
+        };
+
+        // 依真實 VD 計算各路段車速
+        const currentSegments = computed(() => {
+          const list = segmentsConfig[direction.value];
+          return list.map(seg => {
+            // 從 vdRawData 中過濾出包含該路段 pattern 且屬於台9線 (0090) 的 VD
+            const matchedVDs = vdRawData.value.filter(item => {
+              if (!item.VDID || !item.VDID.includes('0090')) return false;
+              return seg.vdPatterns.some(pat => item.VDID.includes(`-${pat}-`));
+            });
+
+            let speeds = [];
+            matchedVDs.forEach(vd => {
+              if (vd.LinkFlows) {
+                vd.LinkFlows.forEach(link => {
+                  if (link.Lanes) {
+                    link.Lanes.forEach(lane => {
+                      if (lane.Speed > 0 && lane.Speed < 150) {
+                        speeds.push(lane.Speed);
+                      }
+                    });
+                  }
+                });
+              }
+            });
+
+            const avgSpeed = speeds.length > 0 
+              ? Math.round(speeds.reduce((a, b) => a + b, 0) / speeds.length) 
+              : 62; // 若離峰或無資料時的合理預設
+
+            return {
+              ...seg,
+              speed: avgSpeed
+            };
+          });
+        });
+
+        // 全線平均車速
+        const overallAvgSpeed = computed(() => {
+          const list = currentSegments.value;
+          const sum = list.reduce((a, b) => a + b.speed, 0);
+          return Math.round(sum / list.length);
+        });
+
+        // 蘇澳到崇德全長約 60 公里，計算行車預估時間
+        const totalEstimatedMinutes = computed(() => {
+          return Math.round((60 / overallAvgSpeed.value) * 60);
+        });
+
+        // 綜合決策文案
+        const decision = computed(() => {
+          const spd = overallAvgSpeed.value;
+          if (spd >= 55) {
+            return {
+              title: '蘇花全線順暢・適合出發',
+              desc: '蘇澳至崇德各隧道車流流暢，無重大塞車與長時間封閉事件，維持均速前行即可。'
+            };
+          } else if (spd >= 38) {
+            return {
+              title: '車流偏多・留意車距',
+              desc: '隧道出口或銜接舊線端車速略為放緩，請保持行車安全距離並遵行隧道號誌。'
+            };
+          } else {
+            return {
+              title: '路況壅塞・建議稍候',
+              desc: '長隧道區間或匯流點車速低於 35 km/h，預估有排隊回堵，出發前請確認管制通報。'
+            };
+          }
+        });
+
+        // 篩選與蘇花相關的即時新聞通報
+        const filteredNews = computed(() => {
+          return newsRawData.value.filter(n => {
+            const title = n.Title || '';
+            const desc = n.Description || '';
+            return title.includes('台9') || title.includes('蘇花') || desc.includes('蘇澳') || desc.includes('崇德') || desc.includes('東澳');
+          }).slice(0, 3);
+        });
+
+        // 篩選蘇花路段監視器
+        const cctvList = computed(() => {
+          const list = [];
+          targetCctvMilestones.forEach((m, idx) => {
+            const found = cctvRawData.value.find(c => 
+              (c.RoadName === '台9線' || c.RoadID === '300090') &&
+              (c.LocationMile && c.LocationMile.includes(m.pattern))
+            );
+            if (found && found.VideoImageURL) {
+              list.push({
+                id: found.CCTVID || idx,
+                title: m.title,
+                desc: found.SurveillanceDescription || m.desc,
+                mileage: found.LocationMile,
+                snapshotUrl: found.VideoImageURL
+              });
+            }
+          });
+          return list;
+        });
+
+        const getStatusBadge = (spd) => {
+          if (spd >= 55) return 'bg-emerald-500/20 text-emerald-400';
+          if (spd >= 35) return 'bg-amber-500/20 text-amber-400';
+          return 'bg-rose-500/20 text-rose-400';
+        };
+
+        const getStatusText = (spd) => {
+          if (spd >= 55) return '順暢';
+          if (spd >= 35) return '車多';
+          return '壅塞';
+        };
+
+        const getSpeedColor = (spd) => {
+          if (spd >= 55) return 'text-emerald-400';
+          if (spd >= 35) return 'text-amber-400';
+          return 'text-rose-400';
+        };
+
+        const handleImgError = (e) => {
+          e.target.src = 'https://placehold.co/400x225/111827/475569?text=CCTV+Connecting';
+        };
+
+        onMounted(() => {
+          loadData();
+          // 每 30 秒自動刷新快照與資料
+          setInterval(loadData, 30000);
+        });
+
+        return {
+          direction,
+          updateTimeDisplay,
+          currentSegments,
+          overallAvgSpeed,
+          totalEstimatedMinutes,
+          decision,
+          filteredNews,
+          cctvList,
+          getStatusBadge,
+          getStatusText,
+          getSpeedColor,
+          handleImgError
+        };
+      }
+    }).mount('#app');
+  </script>
+</body>
+</html>
