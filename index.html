@@ -12,7 +12,7 @@
   <!-- Canonical URL -->
   <link rel="canonical" href="https://qq6105.github.io/-suhua-sentinel/" />
 
-  <!-- Open Graph (Facebook, LINE, etc.) -->
+  <!-- Open Graph -->
   <meta property="og:type" content="website" />
   <meta property="og:title" content="蘇花哨兵 — 蘇花公路／蘇花改即時路況" />
   <meta property="og:description" content="即時車速、CCTV 快照、路段施工與管制放行通報。不只告訴你塞不塞，還告訴你該不該現在走蘇花。" />
@@ -30,7 +30,7 @@
   <meta name="twitter:description" content="即時車速、CCTV 快照、路段施工與管制放行通報。出發前掌握蘇花改最新通行決策。" />
   <meta name="twitter:image" content="https://placehold.co/1200x630/0b0f17/38bdf8?text=Suhua+Sentinel" />
 
-  <!-- Theme Color (for mobile browser UI) -->
+  <!-- Theme Color -->
   <meta name="theme-color" content="#0b0f17" />
   <meta name="mobile-web-app-capable" content="yes" />
   <meta name="apple-mobile-web-app-capable" content="yes" />
@@ -41,7 +41,7 @@
   <meta name="robots" content="index, follow" />
   <meta name="googlebot" content="index, follow, max-image-preview:large, max-snippet:-1, max-video-preview:-1" />
 
-  <!-- Preconnect: Speed up external CDN & THB requests -->
+  <!-- Preconnect -->
   <link rel="preconnect" href="https://cdn.tailwindcss.com" crossorigin />
   <link rel="preconnect" href="https://unpkg.com" crossorigin />
   <link rel="preconnect" href="https://cctv-ss01.thb.gov.tw" crossorigin />
@@ -150,11 +150,11 @@
     @keyframes pulse { 0%, 100% { opacity: 1; } 50% { opacity: 0.3; } }
   </style>
 </head>
-<body>
+<body class="min-h-screen pb-16">
 
-  <!-- App Root -->
+  <!-- App 掛載點 -->
   <div id="root">
-    <!-- Compact App Shell（Vue 載入前呈現的骨架，載入後會被 Vue 替換） -->
+    <!-- App Shell 骨架屏：Vue 載入完成前顯示 -->
     <main aria-busy="true" style="max-width:540px;margin:0 auto;padding:20px;color:#fff;font-family:system-ui,sans-serif">
       <header style="display:flex;align-items:center;justify-content:space-between;gap:12px;margin-bottom:16px">
         <h1 style="font-size:1.35rem;font-weight:700;margin:0">蘇花哨兵</h1>
@@ -172,7 +172,7 @@
     </main>
   </div>
 
-  <!-- Noscript 靜態友善模式 -->
+  <!-- Noscript 靜態模式 -->
   <noscript>
     <div style="max-width:650px;margin:0 auto;padding:28px;font-family:sans-serif;color:#1e293b;background:#fff;border-radius:12px;margin-top:20px">
       <h1 style="font-size:1.5rem;font-weight:bold;margin-bottom:8px">蘇花哨兵 — 蘇花公路／蘇花改即時路況</h1>
@@ -188,7 +188,7 @@
     </div>
   </noscript>
 
-  <!-- Vue 3 核心應用主程式 -->
+  <!-- Vue 3 核心邏輯 -->
   <script>
     const { createApp, ref, computed, onMounted } = Vue;
 
@@ -226,7 +226,7 @@
           { pattern: '166K', title: '崇德管制端', desc: '花蓮崇德管制匯流點' }
         ];
 
-        // 載入 repository 內的即時 JSON 資料
+        // 載入即時 JSON 資料
         const loadData = async () => {
           try {
             const timestamp = Date.now();
