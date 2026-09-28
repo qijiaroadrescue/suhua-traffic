@@ -1,33 +1,35 @@
 name: update-data
 
 on:
-  workflow_dispatch:        # 先只允許手動執行；確認資料沒問題後再打開下面的排程
-  # schedule:
-  #   - cron: "*/5 * * * *"
+  workflow_dispatch: # 支援手動在網頁按 Run workflow 觸發
+  schedule:
+    - cron: '*/10 * * * *' # 每 10 分鐘自動抓取更新一次
 
 permissions:
-  contents: write
-
-concurrency:
-  group: update-data
-  cancel-in-progress: false
+  contents: write # 允許 Actions 儲存並 push 更新後的 json 檔案
 
 jobs:
   run:
     runs-on: ubuntu-latest
+
     steps:
-      - uses: actions/checkout@v4
-      - uses: actions/setup-node@v4
+      - name: Checkout code
+        uses: actions/checkout@v4
+
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
         with:
           node-version: 20
-      - name: 向 TDX 取資料
+
+      - name: Run TDX Fetch Script
         run: node fetch-tdx.mjs
         env:
           TDX_ID: ${{ secrets.TDX_ID }}
           TDX_SECRET: ${{ secrets.TDX_SECRET }}
-      - name: 存檔
+
+      - name: Commit and push changes
         run: |
-          git config user.name "data-bot"
-          git config user.email "data-bot@users.noreply.github.com"
-          git add data
-          git diff --cached --quiet || (git commit -m "update data" && git push)
+          git config --global user.name "data-bot"
+          git config --global user.email "bot@github.actions"
+          git add data/
+          git diff --quiet && git diff --staged --quiet || (git commit -m "update data [skip ci]" && git push)
