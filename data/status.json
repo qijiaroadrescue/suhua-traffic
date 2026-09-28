@@ -1,6 +1,9 @@
 {
-  "updated": "2026-09-28T14:27:07.541Z",
+  "updated": "2026-09-28T14:36:55.853Z",
   "results": {
-    "token": "400 {\"error\":\"invalid_client\",\"error_description\":\"Invalid client credentials\"}"
+    "token": "ok",
+    "vd": "ok",
+    "cctv": "ok",
+    "news": "ok"
   }
 }
