@@ -215,7 +215,7 @@
           ]
         };
 
-        // 南下 = 順樁(S)、北上 = 逆樁(N)，各自使用不同的 CCTVID
+        // 南下 = 順樁(S)、北上 = 逆樁(N)
         const camTargetsRaw = {
           south: [
             ['CCTV-42-0090-102-001', '102K+360', 'a'],
@@ -375,13 +375,29 @@
           }
         });
 
-        // 蘇花相關通報篩選
+        // 蘇花相關通報篩選（已自動排除「高速公路局國5路況專區」）
         const filteredNews = computed(() => {
           return newsRawData.value.filter(n => {
             const title = n.Title || '';
             const desc = n.Description || '';
+            if (title.includes('高速公路局國5路況專區')) return false;
             return title.includes('台9') || title.includes('蘇花') || desc.includes('蘇澳') || desc.includes('崇德') || desc.includes('東澳') || desc.includes('和平');
           }).slice(0, 3);
+        });
+
+        // 國5路況專區資料解析（專供北上模式抓取車程與排隊）
+        const highway5Info = computed(() => {
+          const targetNews = newsRawData.value.find(n => n.Title && n.Title.includes('高速公路局國5路況專區'));
+          if (!targetNews || !targetNews.Description) return null;
+
+          const desc = targetNews.Description;
+          let timeMatch = desc.match(/蘇澳海山西路至國5南港系統[：:]\s*(\d+)\s*分/);
+          let queueMatch = desc.match(/蘇澳海山西路至國5蘇澳交流道入口[：:]\s*排隊\s*([\d.]+)\s*公里/);
+
+          return {
+            time: timeMatch ? timeMatch[1] : '44',
+            queue: queueMatch ? queueMatch[1] : '0'
+          };
         });
 
         // 依照方向獨立篩選的 CCTV 清單
@@ -436,7 +452,6 @@
         onMounted(() => {
           loadData();
           setInterval(loadData, 30000); // 每 30 秒自動刷新
-          // 更新快照時間戳
           setInterval(() => { tick.value = Date.now(); }, 30000);
         });
 
@@ -448,6 +463,7 @@
           totalEstimatedMinutes,
           decision,
           filteredNews,
+          highway5Info,
           cctvList,
           getStatusBadge,
           getStatusText,
@@ -557,6 +573,7 @@
             </div>
           </section>
 
+          <!-- 關鍵點位 CCTV 快照 -->
           <section class="mt-8">
             <div class="flex justify-between items-center mb-3">
               <h3 class="text-xs font-semibold text-slate-400 uppercase tracking-wider">
@@ -582,6 +599,19 @@
                   <div class="text-xs font-semibold text-white truncate">{{ cam.title }}</div>
                   <div class="text-[11px] text-slate-400 mt-0.5 truncate">{{ cam.desc }}</div>
                 </div>
+              </div>
+            </div>
+          </section>
+
+          <!-- 北上專屬：國5銜接路況提醒卡片 -->
+          <section v-if="direction === 'north' && highway5Info" class="mt-6 glass-card rounded-2xl p-5 border-sky-500/20 bg-sky-950/20">
+            <div class="flex items-start gap-3">
+              <span class="text-xl">💡</span>
+              <div>
+                <h4 class="text-sm font-bold text-sky-300">銜接國5路況提醒</h4>
+                <p class="text-xs text-slate-300 mt-1 leading-relaxed">
+                  目前蘇澳交流道<span v-if="highway5Info.queue === '0'">無排隊</span><span v-else>排隊 {{ highway5Info.queue }} 公里</span>，蘇澳至台北南港車程約 <span class="font-bold text-white">{{ highway5Info.time }}</span> 分鐘。
+                </p>
               </div>
             </div>
           </section>
