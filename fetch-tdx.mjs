@@ -59,3 +59,5 @@ if (!tokenRes.ok) {
 
 await writeFile("data/status.json", JSON.stringify(status, null, 2));
 console.log(JSON.stringify(status, null, 2));
+const failed = Object.values(status.results).some((v) => v !== "ok");
+if (failed) process.exitCode = 1; // 有任何一項失敗就讓 Actions 顯示紅色 ✗
