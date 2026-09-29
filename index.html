@@ -273,6 +273,7 @@
           return newsRawData.value.filter(n => {
             const title = n.Title || '';
             const desc = n.Description || '';
+            if (title.includes('國5路況專區')) return false; // 國5 資料另外處理，不放進蘇花警報
             return title.includes('台9') || title.includes('蘇花') || desc.includes('蘇澳') || desc.includes('崇德') || desc.includes('東澳') || desc.includes('和平');
           }).slice(0, 3);
         });
@@ -281,6 +282,19 @@
         const hasClosure = computed(() =>
           filteredNews.value.some(n => /封閉|中斷|封路|阻斷/.test((n.Title || '') + (n.Description || '')))
         );
+
+        // 從「高速公路局國5路況專區」擷取蘇澳→南港車程與蘇澳交流道排隊
+        const freeway5 = computed(() => {
+          const n = newsRawData.value.find(x => (x.Title || '').includes('國5路況專區'));
+          if (!n) return null;
+          const text = (n.Description || '') + (n.Content || '');
+          const t = text.match(/蘇澳海山西路至國5南港系統：(\d+)分/);
+          if (!t) return null;
+          const q = text.match(/蘇澳海山西路至國5蘇澳交流道入口：排隊(\d+(?:\.\d+)?)公里/);
+          let queueText = '蘇澳交流道排隊資料暫缺';
+          if (q) queueText = Number(q[1]) > 0 ? `目前蘇澳交流道排隊 ${q[1]} 公里` : '目前蘇澳交流道無排隊';
+          return { minutes: Number(t[1]), queueText };
+        });
 
         const decision = computed(() => {
           const spd = overallAvgSpeed.value;
@@ -362,7 +376,7 @@
 
         return {
           direction, updateTimeDisplay, dataAgeMin, currentSegments, overallAvgSpeed,
-          totalEstimatedMinutes, decision, hasClosure, filteredNews, cctvList,
+          totalEstimatedMinutes, decision, hasClosure, filteredNews, freeway5, cctvList,
           getStatusBadge, getStatusText, getSpeedColor, getBarColor, handleImgError
         };
       },
@@ -493,6 +507,18 @@
                   <div class="text-xs font-semibold text-white truncate">{{ cam.title }}</div>
                   <div class="text-[11px] text-slate-400 mt-0.5 truncate">{{ cam.desc }}</div>
                 </div>
+              </div>
+            </div>
+          </section>
+
+          <section v-if="direction === 'north' && freeway5" class="mt-8">
+            <div class="glass-card rounded-xl p-4 flex gap-3 items-start border-sky-500/20">
+              <span class="text-lg">💡</span>
+              <div>
+                <div class="text-xs font-semibold text-sky-300 mb-1">銜接國5路況提醒</div>
+                <p class="text-sm text-slate-200 leading-relaxed">
+                  {{ freeway5.queueText }}，蘇澳至台北南港車程約 {{ freeway5.minutes }} 分鐘。
+                </p>
               </div>
             </div>
           </section>
