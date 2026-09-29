@@ -8,6 +8,10 @@ on:
 permissions:
   contents: write # 允許 Actions 儲存並 push 更新後的 json 檔案
 
+concurrency:
+  group: update-data # 同一時間只跑一個，避免 push 衝突
+  cancel-in-progress: false
+
 jobs:
   run:
     runs-on: ubuntu-latest
@@ -28,8 +32,9 @@ jobs:
           TDX_SECRET: ${{ secrets.TDX_SECRET }}
 
       - name: Commit and push changes
+        if: always() # 就算抓取失敗，也把 status.json 存起來方便檢查
         run: |
           git config --global user.name "data-bot"
           git config --global user.email "bot@github.actions"
           git add data/
-          git diff --quiet && git diff --staged --quiet || (git commit -m "update data [skip ci]" && git push)
+          git diff --staged --quiet || (git commit -m "update data [skip ci]" && git push)
