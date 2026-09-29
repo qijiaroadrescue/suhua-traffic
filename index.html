@@ -44,6 +44,9 @@
   <link rel="preconnect" href="https://cctv-ss02.thb.gov.tw" crossorigin />
   <link rel="preconnect" href="https://cctv-ss03.thb.gov.tw" crossorigin />
   <link rel="preconnect" href="https://cctv-ss06.thb.gov.tw" crossorigin />
+  <link rel="preconnect" href="https://cctv-ss04.thb.gov.tw" crossorigin />
+  <link rel="preconnect" href="https://cctv-ss05.thb.gov.tw" crossorigin />
+  <link rel="preconnect" href="https://cctv-ss07.thb.gov.tw" crossorigin />
 
   <!-- JSON-LD: WebSite -->
   <script type="application/ld+json">
@@ -171,6 +174,8 @@
         const direction = ref('south');
         const updateTimeDisplay = ref('--:--');
         const dataAgeMin = ref(0);
+        const fetchAgeMin = ref(0);
+        const fetchFailed = ref(false);
         const tick = ref(Date.now());
         const vdRawData = ref([]);
         const newsRawData = ref([]);
@@ -189,16 +194,41 @@
           ]
         };
 
-        const targetCctvMilestones = [
-          { pattern: '104K', title: '蘇澳端入口', desc: '台9線與台9丁蘇澳端匯流點' },
-          { pattern: '112K', title: '東澳隧道口', desc: '東澳隧道端' },
-          { pattern: '128K', title: '觀音隧道北口', desc: '南澳長隧道段入口' },
-          { pattern: '141K', title: '谷風隧道南口', desc: '和平端隧道出口' },
-          { pattern: '149K', title: '中仁隧道北口', desc: '和中段入口' },
-          { pattern: '155K', title: '仁水隧道段', desc: '仁水隧道區間' },
-          { pattern: '158K', title: '大清水端', desc: '大清水匯入舊線端' },
-          { pattern: '166K', title: '崇德管制端', desc: '花蓮崇德管制匯流點' }
+        const camSection = ref('all');
+        const showAllCams = ref(false);
+        const camSections = [
+          { key: 'all', label: '全部' },
+          { key: 'a', label: '蘇澳–東澳' },
+          { key: 'b', label: '南澳–和平' },
+          { key: 'c', label: '和中–大清水' },
+          { key: 'd', label: '崇德–花蓮' }
         ];
+        // 想增加或刪除點位，只要改這份清單：[CCTVID, 樁號, 方向, 區段, 重點名稱(有填才算重點)]
+        const camTargets = [
+          ['CCTV-42-0090-102-002', '102K+930', '南下', 'a'],
+          ['CCTV-42-0090-104-001', '104K+183', '', 'a', '蘇澳端入口'],
+          ['CCTV-42-0090-107-003', '107K+965', '南下', 'a'],
+          ['CCTV-42-0090-109-007', '109K+237', '南下', 'a'],
+          ['CCTV-42-0090-112-002', '112K+691', '南下', 'a', '東澳隧道口'],
+          ['CCTV-42-0090-113-001', '113K+181', '南下', 'a'],
+          ['CCTV-42-0090-125-001', '125K+412', '南下', 'b'],
+          ['CCTV-42-0090-128-006', '128K+342', '北上', 'b', '觀音隧道北口'],
+          ['CCTV-42-0090-131-018', '131K+782', '南下', 'b'],
+          ['CCTV-42-0090-135-019', '135K+842', '南下', 'b'],
+          ['CCTV-42-0090-139-018', '139K+661', '南下', 'b'],
+          ['CCTV-42-0090-141-017', '141K+760', '南下', 'b', '谷風隧道南口'],
+          ['CCTV-42-0090-144-003', '144K+011', '北上', 'b'],
+          ['CCTV-42-0090-148-001', '148K+820', '北上', 'c'],
+          ['CCTV-42-0090-149-001', '149K+118', '南下', 'c', '中仁隧道北口'],
+          ['CCTV-42-0090-151-013', '151K+584', '南下', 'c'],
+          ['CCTV-42-0090-155-001', '155K+129', '北上', 'c', '仁水隧道段'],
+          ['CCTV-42-0090-157-018', '157K+532', '南下', 'c'],
+          ['CCTV-42-0090-158-001', '158K+036', '北上', 'c', '大清水端'],
+          ['CCTV-42-0090-162-004', '162K+780', '', 'd'],
+          ['CCTV-42-0090-166-002', '166K+230', '', 'd', '崇德管制端'],
+          ['CCTV-43-0090-173-001', '173K+930', '', 'd'],
+          ['CCTV-43-0090-177-001', '177K+895', '', 'd']
+        ].map(([id, mile, dir, sec, name]) => ({ id, mile, dir, sec, name }));
 
         const loadData = async () => {
           try {
@@ -222,10 +252,21 @@
               newsRawData.value = newsJson.Newses || [];
             }
 
-            const cctvRes = await fetch(`./data/cctv.json?t=${timestamp}`);
-            if (cctvRes.ok) {
-              const cctvJson = await cctvRes.json();
-              cctvRawData.value = cctvJson.CCTVs || [];
+            // 監視器清單很大且一天才更新一次，只在第一次載入時讀取；快照圖片本身仍每分鐘更新
+            if (cctvRawData.value.length === 0) {
+              const cctvRes = await fetch(`./data/cctv.json?t=${timestamp}`);
+              if (cctvRes.ok) {
+                const cctvJson = await cctvRes.json();
+                cctvRawData.value = cctvJson.CCTVs || [];
+              }
+            }
+
+            // 讀取排程執行紀錄，分辨「排程沒跑」還是「公路局來源沒更新」
+            const stRes = await fetch(`./data/status.json?t=${timestamp}`);
+            if (stRes.ok) {
+              const st = await stRes.json();
+              if (st.updated) fetchAgeMin.value = Math.round((Date.now() - new Date(st.updated).getTime()) / 60000);
+              fetchFailed.value = Object.values(st.results || {}).some(v => v !== 'ok');
             }
           } catch (e) {
             console.error('同步即時路況資料時發生錯誤:', e);
@@ -316,25 +357,34 @@
         });
 
         // CCTV 快照網址加時間參數，瀏覽器才會真的重新載入圖片
-        const cctvList = computed(() => {
+        const cctvAll = computed(() => {
           const list = [];
-          targetCctvMilestones.forEach((m, idx) => {
-            const found = cctvRawData.value.find(c =>
-              (c.RoadName === '台9線' || c.RoadID === '300090') &&
-              (c.LocationMile && c.LocationMile.includes(m.pattern))
-            );
+          camTargets.forEach(t => {
+            // 先用 CCTVID 精準比對，找不到再用樁號比對
+            const found = cctvRawData.value.find(c => c.CCTVID === t.id)
+              || cctvRawData.value.find(c =>
+                   (c.RoadName === '台9線' || c.RoadID === '300090') &&
+                   c.LocationMile && String(c.LocationMile).replace(/\s/g, '').includes(t.mile));
             if (found && found.VideoImageURL) {
               const url = found.VideoImageURL;
               list.push({
-                id: found.CCTVID || idx,
-                title: m.title,
-                desc: found.SurveillanceDescription || m.desc,
-                mileage: found.LocationMile,
+                id: t.id,
+                sec: t.sec,
+                named: !!t.name,
+                title: t.name || (t.mile + ' ' + t.dir).trim(),
+                desc: found.SurveillanceDescription || (t.dir ? t.dir + '方向' : '台9線'),
+                mileage: found.LocationMile || t.mile,
                 snapshotUrl: url + (url.includes('?') ? '&' : '?') + 't=' + tick.value
               });
             }
           });
           return list;
+        });
+
+        // 「全部」預設只顯示重點點位，按按鈕才展開全部
+        const cctvList = computed(() => {
+          if (camSection.value !== 'all') return cctvAll.value.filter(c => c.sec === camSection.value);
+          return showAllCams.value ? cctvAll.value : cctvAll.value.filter(c => c.named);
         });
 
         const getStatusBadge = (spd) => {
@@ -375,8 +425,8 @@
         });
 
         return {
-          direction, updateTimeDisplay, dataAgeMin, currentSegments, overallAvgSpeed,
-          totalEstimatedMinutes, decision, hasClosure, filteredNews, freeway5, cctvList,
+          direction, updateTimeDisplay, dataAgeMin, fetchAgeMin, fetchFailed, currentSegments, overallAvgSpeed,
+          totalEstimatedMinutes, decision, hasClosure, filteredNews, freeway5, cctvList, cctvAll, camSection, showAllCams, camSections,
           getStatusBadge, getStatusText, getSpeedColor, getBarColor, handleImgError
         };
       },
@@ -395,7 +445,9 @@
               <div class="text-right">
                 <div class="text-[11px] text-slate-400">公路局 TDX 即時資料</div>
                 <div class="text-xs font-mono text-emerald-400">{{ updateTimeDisplay }}</div>
-                <div v-if="dataAgeMin > 30" class="text-[11px] text-amber-400">⚠️ 資料已 {{ dataAgeMin }} 分鐘未更新</div>
+                <div v-if="fetchAgeMin > 30" class="text-[11px] text-amber-400">⚠️ 自動更新已 {{ fetchAgeMin }} 分鐘沒有執行</div>
+                <div v-else-if="fetchFailed" class="text-[11px] text-amber-400">⚠️ 最近一次抓取失敗，顯示的是舊資料</div>
+                <div v-else-if="dataAgeMin > 30" class="text-[11px] text-amber-400">⚠️ 公路局來源資料已 {{ dataAgeMin }} 分鐘未更新</div>
               </div>
               <div class="bg-slate-800/90 p-1 rounded-xl flex text-xs font-medium border border-slate-700/50">
                 <button
@@ -490,12 +542,19 @@
               <span class="text-[11px] text-slate-500">快照每分鐘更新・路況資料每 10 分鐘同步</span>
             </div>
 
+            <div class="flex gap-2 overflow-x-auto pb-2 mb-3 text-xs">
+              <button v-for="s in camSections" :key="s.key" @click="camSection = s.key"
+                :class="camSection === s.key ? 'bg-indigo-600 text-white' : 'bg-slate-800 text-slate-400 hover:text-white'"
+                class="px-3 py-1.5 rounded-lg whitespace-nowrap transition-all">{{ s.label }}</button>
+            </div>
+
             <div class="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-4 gap-3">
               <div v-for="cam in cctvList" :key="cam.id" class="glass-card rounded-xl overflow-hidden group">
                 <div class="relative bg-slate-900 aspect-video flex items-center justify-center overflow-hidden">
                   <img
                     :src="cam.snapshotUrl"
                     :alt="cam.title"
+                    loading="lazy"
                     class="w-full h-full object-cover group-hover:scale-105 transition-transform duration-300"
                     @error="handleImgError($event)"
                   />
@@ -508,6 +567,14 @@
                   <div class="text-[11px] text-slate-400 mt-0.5 truncate">{{ cam.desc }}</div>
                 </div>
               </div>
+            </div>
+
+            <p v-if="cctvList.length === 0" class="text-xs text-slate-500 mt-2">目前沒有可顯示的影像，請稍後再試。</p>
+
+            <div v-if="camSection === 'all'" class="mt-4 text-center">
+              <button @click="showAllCams = !showAllCams" class="text-xs text-indigo-300 hover:text-white underline">
+                {{ showAllCams ? '只看重點點位' : '顯示全部 ' + cctvAll.length + ' 個點位' }}
+              </button>
             </div>
           </section>
 
