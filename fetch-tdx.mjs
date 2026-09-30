@@ -1,4 +1,3 @@
-// 排程程式：向 TDX 取資料並存成檔案（由 GitHub Actions 執行）
 import { mkdir, writeFile } from "node:fs/promises";
 
 const TOKEN_URL = "https://tdx.transportdata.tw/auth/realms/TDXConnect/protocol/openid-connect/token";
@@ -43,13 +42,26 @@ function trimVd(json) {
   return { ...json, VDLives: list };
 }
 
+// News：保留與蘇花或台9線相關的通報
+function trimNews(json) {
+  const list = (json.Newses || []).filter((item) => {
+    const title = item.Title || '';
+    const desc = item.Description || '';
+    return title.includes('台9') || title.includes('蘇花') || desc.includes('蘇澳') || desc.includes('崇德') || desc.includes('國5');
+  });
+  return { ...json, Newses: list };
+}
+
 const TRIMMERS = {
   cctv: { fn: trimCctv, count: (j) => j.CCTVs.length },
   vd:   { fn: trimVd,   count: (j) => j.VDLives.length },
+  news: { fn: trimNews, count: (j) => j.Newses.length },
 };
 
 await mkdir("data", { recursive: true });
-const status = { updated: new Date().toISOString(), results: {} };
+
+// 將 kept 獨立出來，避免被誤認為錯誤結果
+const status = { updated: new Date().toISOString(), results: {}, kept: {} };
 
 const tokenRes = await call(TOKEN_URL, {
   method: "POST",
@@ -90,7 +102,7 @@ if (!tokenRes.ok) {
       if (trimmer) {
         const trimmed = trimmer.fn(json);
         const n = trimmer.count(trimmed);
-        status.results[name + "_kept"] = n;
+        status.kept[name] = n; // 筆數正確存放在 kept 物件中
         if (n > 0) out = JSON.stringify(trimmed); // 篩完是空的就存原始資料，避免網站變空白
       }
 
@@ -105,6 +117,6 @@ if (!tokenRes.ok) {
 await writeFile("data/status.json", JSON.stringify(status, null, 2));
 console.log(JSON.stringify(status, null, 2));
 
-// 只檢查抓取結果（忽略 xxx_kept 這類數字），有失敗就讓 Actions 顯示紅色 ✗
-const failed = Object.entries(status.results).some(([k, v]) => !k.endsWith("_kept") && v !== "ok");
+// 只檢查抓取結果，有失敗就讓 Actions 顯示紅色 ✗
+const failed = Object.entries(status.results).some(([k, v]) => v !== "ok");
 if (failed) process.exitCode = 1;
