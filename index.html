@@ -9,7 +9,6 @@
   <meta name="description" content="蘇花哨兵提供台9線蘇花改、舊蘇花公路即時車速、CCTV 監視器快照、道路阻斷落石與管制放行通報。南下北上一鍵查詢，出發前掌握花蓮宜蘭往返路況。" />
   <meta name="keywords" content="蘇花公路,蘇花改,台9線,台9丁,蘇花路況,蘇花即時影像,蘇花CCTV,蘇花管制,落石坍方,車速,花蓮路況,宜蘭花蓮交通,蘇花哨兵" />
 
-  <!-- Canonical URL -->
   <link rel="canonical" href="https://qq6105.github.io/-suhua-sentinel/" />
 
   <!-- Open Graph -->
@@ -30,24 +29,24 @@
   <meta name="twitter:description" content="即時車速、CCTV 快照、路段施工與管制放行通報。出發前掌握蘇花改最新通行決策。" />
   <meta name="twitter:image" content="https://placehold.co/1200x630/0b0f17/38bdf8?text=Suhua+Sentinel" />
 
-  <!-- Theme Color -->
   <meta name="theme-color" content="#0b0f17" />
   <meta name="mobile-web-app-capable" content="yes" />
   <meta name="apple-mobile-web-app-capable" content="yes" />
   <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent" />
   <meta name="apple-mobile-web-app-title" content="蘇花哨兵" />
 
-  <!-- Robots -->
   <meta name="robots" content="index, follow" />
   <meta name="googlebot" content="index, follow, max-image-preview:large, max-snippet:-1, max-video-preview:-1" />
 
-  <!-- Preconnect -->
   <link rel="preconnect" href="https://cdn.tailwindcss.com" crossorigin />
   <link rel="preconnect" href="https://unpkg.com" crossorigin />
   <link rel="preconnect" href="https://cctv-ss01.thb.gov.tw" crossorigin />
   <link rel="preconnect" href="https://cctv-ss02.thb.gov.tw" crossorigin />
   <link rel="preconnect" href="https://cctv-ss03.thb.gov.tw" crossorigin />
   <link rel="preconnect" href="https://cctv-ss06.thb.gov.tw" crossorigin />
+  <link rel="preconnect" href="https://cctv-ss04.thb.gov.tw" crossorigin />
+  <link rel="preconnect" href="https://cctv-ss05.thb.gov.tw" crossorigin />
+  <link rel="preconnect" href="https://cctv-ss07.thb.gov.tw" crossorigin />
 
   <!-- JSON-LD: WebSite -->
   <script type="application/ld+json">
@@ -79,20 +78,12 @@
     "browserRequirements": "Requires JavaScript",
     "inLanguage": ["zh-TW"],
     "isAccessibleForFree": true,
-    "offers": {
-      "@type": "Offer",
-      "price": "0",
-      "priceCurrency": "TWD"
-    },
+    "offers": { "@type": "Offer", "price": "0", "priceCurrency": "TWD" },
     "about": {
       "@type": "Place",
       "name": "蘇花公路 / 蘇花改",
       "alternateName": "Suhua Highway",
-      "address": {
-        "@type": "PostalAddress",
-        "addressRegion": "花蓮縣 / 宜蘭縣",
-        "addressCountry": "TW"
-      }
+      "address": { "@type": "PostalAddress", "addressRegion": "花蓮縣 / 宜蘭縣", "addressCountry": "TW" }
     }
   }
   </script>
@@ -106,42 +97,30 @@
       {
         "@type": "Question",
         "name": "蘇花改目前全線順暢嗎？",
-        "acceptedAnswer": {
-          "@type": "Answer",
-          "text": "蘇花哨兵串接交通部公路局即時車輛偵測器（VD）與管制資訊，在首頁能即時查看東澳、觀音、谷風、中仁、仁水等隧道路段之雙向車速與即時監視器快照。"
-        }
+        "acceptedAnswer": { "@type": "Answer", "text": "蘇花哨兵串接交通部公路局即時車輛偵測器（VD）與管制資訊，在首頁能即時查看東澳、觀音、谷風、中仁、仁水等隧道路段之雙向車速與即時監視器快照。" }
       },
       {
         "@type": "Question",
         "name": "蘇花改最高速限與最低速限是多少？",
-        "acceptedAnswer": {
-          "@type": "Answer",
-          "text": "蘇花改主要長隧道（東澳、觀音、谷風、中仁隧道）最高速限為 70 km/h，最低速限 50 km/h；仁水隧道為汽機車混合車道，最高速限為 60 km/h。"
-        }
+        "acceptedAnswer": { "@type": "Answer", "text": "蘇花改主要長隧道（東澳、觀音、谷風、中仁隧道）最高速限為 70 km/h，最低速限 50 km/h；仁水隧道為汽機車混合車道，最高速限為 60 km/h。" }
       },
       {
         "@type": "Question",
         "name": "遇豪大雨或地震時蘇花公路會封閉嗎？",
-        "acceptedAnswer": {
-          "@type": "Answer",
-          "text": "遇颱風豪雨或強震時，公路局可能針對台9丁線（舊蘇花）或台9線易落石路段實施預警性封路或時段性放行管制，可於本站即時通報區塊查看官方最新發布資訊。"
-        }
+        "acceptedAnswer": { "@type": "Answer", "text": "遇颱風豪雨或強震時，公路局可能針對台9丁線（舊蘇花）或台9線易落石路段實施預警性封路或時段性放行管制，可於本站即時通報區塊查看官方最新發布資訊。" }
       },
       {
         "@type": "Question",
         "name": "蘇花哨兵的資料來源為何？",
-        "acceptedAnswer": {
-          "@type": "Answer",
-          "text": "資料來自交通部 TDX 運輸資料流通服務與公路局第四區養護工程處，包含即時車輛偵測器（VD）、路況監視器（CCTV）及即時路況通報。"
-        }
+        "acceptedAnswer": { "@type": "Answer", "text": "資料來自交通部 TDX 運輸資料流通服務與公路局第四區養護工程處，包含即時車輛偵測器（VD）、路況監視器（CCTV）及即時路況通報。" }
       }
     ]
   }
   </script>
 
-  <!-- Tailwind CSS & Vue 3 -->
+  <!-- Tailwind CSS & Vue 3（已鎖定版本） -->
   <script src="https://cdn.tailwindcss.com"></script>
-  <script src="https://unpkg.com/vue@3/dist/vue.global.prod.js"></script>
+  <script src="https://unpkg.com/vue@3.5.13/dist/vue.global.prod.js"></script>
 
   <style>
     body { background-color: #0b0f17; color: #f1f5f9; font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif; }
@@ -150,11 +129,10 @@
     @keyframes pulse { 0%, 100% { opacity: 1; } 50% { opacity: 0.3; } }
   </style>
 </head>
-<body class="min-h-screen pb-16">
+<body>
 
-  <!-- App 掛載點 -->
   <div id="root">
-    <!-- App Shell 骨架屏 -->
+    <!-- Vue 載入前的骨架畫面 -->
     <main aria-busy="true" style="max-width:540px;margin:0 auto;padding:20px;color:#fff;font-family:system-ui,sans-serif">
       <header style="display:flex;align-items:center;justify-content:space-between;gap:12px;margin-bottom:16px">
         <h1 style="font-size:1.35rem;font-weight:700;margin:0">蘇花哨兵</h1>
@@ -172,7 +150,6 @@
     </main>
   </div>
 
-  <!-- Noscript 靜態模式 -->
   <noscript>
     <div style="max-width:650px;margin:0 auto;padding:28px;font-family:sans-serif;color:#1e293b;background:#fff;border-radius:12px;margin-top:20px">
       <h1 style="font-size:1.5rem;font-weight:bold;margin-bottom:8px">蘇花哨兵 — 蘇花公路／蘇花改即時路況</h1>
@@ -188,7 +165,7 @@
     </div>
   </noscript>
 
-  <!-- Vue 3 核心邏輯 -->
+  <!-- Vue 3 主程式 -->
   <script>
     const { createApp, ref, computed, onMounted } = Vue;
 
@@ -196,12 +173,14 @@
       setup() {
         const direction = ref('south');
         const updateTimeDisplay = ref('--:--');
+        const dataAgeMin = ref(0);
+        const fetchAgeMin = ref(0);
+        const fetchFailed = ref(false);
         const tick = ref(Date.now());
         const vdRawData = ref([]);
         const newsRawData = ref([]);
         const cctvRawData = ref([]);
 
-        // 蘇花改重點路段配置
         const segmentsConfig = {
           south: [
             { key: 'dongao', name: '蘇澳 ⇄ 東澳 (東澳隧道)', mileage: '台9線 104K-113K', limit: 70, vdPatterns: ['104', '106', '107', '111', '112'] },
@@ -215,6 +194,16 @@
           ]
         };
 
+        const camSection = ref('all');
+        const showAllCams = ref(false);
+        const camSections = [
+          { key: 'all', label: '全部' },
+          { key: 'a', label: '蘇澳–東澳' },
+          { key: 'b', label: '南澳–和平' },
+          { key: 'c', label: '和中–大清水' },
+          { key: 'd', label: '崇德–花蓮' }
+        ];
+        // 想增加或刪除點位，只要改這份清單：[CCTVID, 樁號, 區段, 重點名稱(有填才算重點)]
         // 南下 = 順樁(S)、北上 = 逆樁(N)
         const camTargetsRaw = {
           south: [
@@ -224,19 +213,16 @@
             ['CCTV-42-0090-109-007', '109K+237', 'a'],
             ['CCTV-42-0090-112-002', '112K+691', 'a', '東澳隧道口'],
             ['CCTV-42-0090-113-001', '113K+181', 'a'],
-
             ['CCTV-42-0090-125-001', '125K+412', 'b'],
             ['CCTV-42-0090-131-018', '131K+782', 'b'],
             ['CCTV-42-0090-135-019', '135K+842', 'b'],
             ['CCTV-42-0090-139-018', '139K+661', 'b'],
             ['CCTV-42-0090-141-017', '141K+760', 'b', '谷風隧道南口'],
-
             ['CCTV-42-0090-149-001', '149K+118', 'c', '中仁隧道北口'],
             ['CCTV-42-0090-151-013', '151K+584', 'c'],
             ['CCTV-42-0090-155-002', '155K+129', 'c', '仁水隧道段'],
             ['CCTV-42-0090-157-018', '157K+532', 'c'],
             ['CCTV-42-0090-158-002', '158K+036', 'c', '大清水端'],
-
             ['CCTV-42-0090-162-004', '162K+780', 'd'],
             ['CCTV-42-0090-166-002', '166K+230', 'd', '崇德管制端'],
             ['CCTV-43-0090-173-001', '173K+930', 'd'],
@@ -248,15 +234,12 @@
             ['CCTV-42-0090-107-002', '107K+924', 'a'],
             ['CCTV-42-0090-109-005', '109K+286', 'a'],
             ['CCTV-42-0090-112-001', '112K+691', 'a', '東澳隧道口'],
-            ['CCTV-42-0090-112-003', '112K+906', 'a'],
-
             ['CCTV-42-0090-128-006', '128K+342', 'b', '觀音隧道北口'],
             ['CCTV-42-0090-131-023', '131K+833', 'b'],
             ['CCTV-42-0090-135-024', '135K+907', 'b'],
             ['CCTV-42-0090-139-023', '139K+734', 'b'],
             ['CCTV-42-0090-141-016', '141K+692', 'b', '谷風隧道段'],
             ['CCTV-42-0090-144-001', '144K+950', 'b'],
-
             ['CCTV-42-0090-148-001', '148K+820', 'c'],
             ['CCTV-42-0090-149-002', '149K+156', 'c', '中仁隧道北口'],
             ['CCTV-42-0090-151-018', '151K+642', 'c'],
@@ -264,22 +247,20 @@
             ['CCTV-42-0090-156-027', '156K+892', 'c'],
             ['CCTV-42-0090-158-001', '158K+036', 'c', '大清水端'],
             ['CCTV-42-0090-160-003', '160K+710', 'c'],
-
             ['CCTV-43-0090-172-001', '172K+150', 'd'],
             ['CCTV-43-0090-175-003', '175K+980', 'd'],
             ['CCTV-43-0090-177-002', '177K+895', 'd']
           ]
         };
-
         const camTargets = {
           south: camTargetsRaw.south.map(([id, mile, sec, name]) => ({ id, mile, sec, name })),
           north: camTargetsRaw.north.map(([id, mile, sec, name]) => ({ id, mile, sec, name }))
         };
 
-        // 載入即時 JSON 資料
         const loadData = async () => {
           try {
-            const timestamp = Date.now();
+            tick.value = Date.now();
+            const timestamp = tick.value;
 
             const vdRes = await fetch(`./data/vd.json?t=${timestamp}`);
             if (vdRes.ok) {
@@ -288,6 +269,7 @@
               if (vdJson.UpdateTime) {
                 const date = new Date(vdJson.UpdateTime);
                 updateTimeDisplay.value = date.toLocaleTimeString('zh-TW', { hour: '2-digit', minute: '2-digit' });
+                dataAgeMin.value = Math.round((Date.now() - date.getTime()) / 60000);
               }
             }
 
@@ -297,17 +279,28 @@
               newsRawData.value = newsJson.Newses || [];
             }
 
-            const cctvRes = await fetch(`./data/cctv.json?t=${timestamp}`);
-            if (cctvRes.ok) {
-              const cctvJson = await cctvRes.json();
-              cctvRawData.value = cctvJson.CCTVs || [];
+            // 監視器清單很大且一天才更新一次，只在第一次載入時讀取；快照圖片本身仍每分鐘更新
+            if (cctvRawData.value.length === 0) {
+              const cctvRes = await fetch(`./data/cctv.json?t=${timestamp}`);
+              if (cctvRes.ok) {
+                const cctvJson = await cctvRes.json();
+                cctvRawData.value = cctvJson.CCTVs || [];
+              }
+            }
+
+            // 讀取排程執行紀錄，分辨「排程沒跑」還是「公路局來源沒更新」
+            const stRes = await fetch(`./data/status.json?t=${timestamp}`);
+            if (stRes.ok) {
+              const st = await stRes.json();
+              if (st.updated) fetchAgeMin.value = Math.round((Date.now() - new Date(st.updated).getTime()) / 60000);
+              fetchFailed.value = Object.values(st.results || {}).some(v => v !== 'ok');
             }
           } catch (e) {
             console.error('同步即時路況資料時發生錯誤:', e);
           }
         };
 
-        // 各路段車速計算
+        // 各路段車速（沒有資料時為 null，不再假裝順暢）
         const currentSegments = computed(() => {
           const list = segmentsConfig[direction.value];
           return list.map(seg => {
@@ -316,109 +309,99 @@
               return seg.vdPatterns.some(pat => item.VDID.includes(`-${pat}-`));
             });
 
-            let speeds = [];
+            const speeds = [];
             matchedVDs.forEach(vd => {
-              if (vd.LinkFlows) {
-                vd.LinkFlows.forEach(link => {
-                  if (link.Lanes) {
-                    link.Lanes.forEach(lane => {
-                      if (lane.Speed > 0 && lane.Speed < 140) {
-                        speeds.push(lane.Speed);
-                      }
-                    });
-                  }
+              (vd.LinkFlows || []).forEach(link => {
+                (link.Lanes || []).forEach(lane => {
+                  if (lane.Speed > 0 && lane.Speed < 140) speeds.push(lane.Speed);
                 });
-              }
+              });
             });
 
-            const avgSpeed = speeds.length > 0 
-              ? Math.round(speeds.reduce((a, b) => a + b, 0) / speeds.length) 
-              : 62;
+            const avgSpeed = speeds.length > 0
+              ? Math.round(speeds.reduce((a, b) => a + b, 0) / speeds.length)
+              : null;
 
-            return {
-              ...seg,
-              speed: avgSpeed
-            };
+            return { ...seg, speed: avgSpeed };
           });
         });
 
-        // 全線平均車速
         const overallAvgSpeed = computed(() => {
-          const list = currentSegments.value;
-          const sum = list.reduce((a, b) => a + b.speed, 0);
-          return Math.round(sum / list.length);
+          const valid = currentSegments.value.filter(s => s.speed !== null);
+          if (!valid.length) return null;
+          return Math.round(valid.reduce((a, b) => a + b.speed, 0) / valid.length);
         });
 
-        // 預估車程（蘇澳至崇德全長約 60 公里）
-        const totalEstimatedMinutes = computed(() => {
-          return Math.round((60 / overallAvgSpeed.value) * 60);
-        });
+        const totalEstimatedMinutes = computed(() =>
+          overallAvgSpeed.value ? Math.round((60 / overallAvgSpeed.value) * 60) : null
+        );
 
-        // 綜合決策
-        const decision = computed(() => {
-          const spd = overallAvgSpeed.value;
-          if (spd >= 55) {
-            return {
-              title: '蘇花全線順暢・適合出發',
-              desc: '蘇澳至崇德各隧道車流流暢，無排隊塞車與重大阻斷事件，蘇花改全線維持均速前行。'
-            };
-          } else if (spd >= 38) {
-            return {
-              title: '車流偏多・留意車距',
-              desc: '隧道出口或銜接路段車速稍有放緩，崇德端匯流處車流較密，請保持行車安全距離。'
-            };
-          } else {
-            return {
-              title: '路況壅塞・建議稍候',
-              desc: '長隧道區間或管制點車速低於 35 km/h，預估有排隊回堵現象，出發前請確認管制訊息。'
-            };
-          }
-        });
-
-        // 蘇花相關通報篩選（已自動排除「高速公路局國5路況專區」）
+        // 蘇花相關通報
         const filteredNews = computed(() => {
           return newsRawData.value.filter(n => {
             const title = n.Title || '';
             const desc = n.Description || '';
-            if (title.includes('高速公路局國5路況專區')) return false;
+            if (title.includes('國5路況專區')) return false; // 國5 資料另外處理，不放進蘇花警報
             return title.includes('台9') || title.includes('蘇花') || desc.includes('蘇澳') || desc.includes('崇德') || desc.includes('東澳') || desc.includes('和平');
           }).slice(0, 3);
         });
 
-        // 國5路況專區資料解析（專供北上模式抓取車程與排隊）
-        const highway5Info = computed(() => {
-          const targetNews = newsRawData.value.find(n => n.Title && n.Title.includes('高速公路局國5路況專區'));
-          if (!targetNews || !targetNews.Description) return null;
+        // 通報含「封閉／中斷／封路」時，優先顯示警示
+        const hasClosure = computed(() =>
+          filteredNews.value.some(n => /封閉|中斷|封路|阻斷/.test((n.Title || '') + (n.Description || '')))
+        );
 
-          const desc = targetNews.Description;
-          let timeMatch = desc.match(/蘇澳海山西路至國5南港系統[：:]\s*(\d+)\s*分/);
-          let queueMatch = desc.match(/蘇澳海山西路至國5蘇澳交流道入口[：:]\s*排隊\s*([\d.]+)\s*公里/);
-
-          return {
-            time: timeMatch ? timeMatch[1] : '44',
-            queue: queueMatch ? queueMatch[1] : '0'
-          };
+        // 從「高速公路局國5路況專區」擷取蘇澳→南港車程與蘇澳交流道排隊
+        const freeway5 = computed(() => {
+          const n = newsRawData.value.find(x => (x.Title || '').includes('國5路況專區'));
+          if (!n) return null;
+          const text = (n.Description || '') + (n.Content || '');
+          const t = text.match(/蘇澳海山西路至國5南港系統：(\d+)分/);
+          if (!t) return null;
+          const q = text.match(/蘇澳海山西路至國5蘇澳交流道入口：排隊(\d+(?:\.\d+)?)公里/);
+          let queueText = '蘇澳交流道排隊資料暫缺';
+          if (q) queueText = Number(q[1]) > 0 ? `目前蘇澳交流道排隊 ${q[1]} 公里` : '目前蘇澳交流道無排隊';
+          return { minutes: Number(t[1]), queueText };
         });
 
-        // 依照方向獨立篩選的 CCTV 清單
-        const cctvList = computed(() => {
+        const decision = computed(() => {
+          const spd = overallAvgSpeed.value;
+          if (hasClosure.value) {
+            return {
+              title: '有封閉／中斷通報・出發前請先確認',
+              desc: '下方通報提到封閉或中斷，請先閱讀管制內容，或至公路局 168 確認最新放行時間。'
+            };
+          }
+          if (spd === null) {
+            return {
+              title: '暫無車速資料・請先確認管制訊息',
+              desc: '目前無法取得即時車速（可能資料更新中或路段管制），請參考下方通報與 CCTV，或至公路局 168 確認。'
+            };
+          }
+          if (spd >= 55) return { title: '蘇花全線順暢・適合出發', desc: '蘇澳至崇德各隧道車流流暢，蘇花改全線維持均速前行。' };
+          if (spd >= 38) return { title: '車流偏多・留意車距', desc: '隧道出口或銜接路段車速稍有放緩，請保持行車安全距離。' };
+          return { title: '路況壅塞・建議稍候', desc: '長隧道區間或管制點車速低於 35 km/h，預估有排隊回堵，出發前請確認管制訊息。' };
+        });
+
+        // CCTV 快照網址加時間參數，瀏覽器才會真的重新載入圖片
+        const cctvAll = computed(() => {
           const dirCode = direction.value === 'south' ? 'S' : 'N';
           const dirText = direction.value === 'south' ? '南下' : '北上';
           const list = [];
-
           camTargets[direction.value].forEach(t => {
+            // 先用 CCTVID 精準比對，找不到再用「方向＋樁號」比對
             const found = cctvRawData.value.find(c => c.CCTVID === t.id)
               || cctvRawData.value.find(c =>
-                   c.RoadID === '300090' &&
-                   c.RoadDirection === dirCode &&
+                   c.RoadID === '300090' && c.RoadDirection === dirCode &&
                    c.LocationMile && String(c.LocationMile).replace(/\s/g, '') === t.mile);
-
             if (found && found.VideoImageURL) {
               const url = found.VideoImageURL;
               list.push({
-                id: found.CCTVID,
-                title: t.name || `${t.mile} ${dirText}`,
-                desc: found.SurveillanceDescription || `${dirText}方向`,
+                id: t.id,
+                sec: t.sec,
+                named: !!t.name,
+                title: t.name || (t.mile + ' ' + dirText),
+                desc: found.SurveillanceDescription || (dirText + '方向'),
                 mileage: found.LocationMile || t.mile,
                 snapshotUrl: url + (url.includes('?') ? '&' : '?') + 't=' + tick.value
               });
@@ -427,22 +410,38 @@
           return list;
         });
 
+        // 「全部」預設只顯示重點點位，按按鈕才展開全部
+        const cctvList = computed(() => {
+          if (camSection.value !== 'all') return cctvAll.value.filter(c => c.sec === camSection.value);
+          return showAllCams.value ? cctvAll.value : cctvAll.value.filter(c => c.named);
+        });
+
         const getStatusBadge = (spd) => {
+          if (spd === null) return 'bg-slate-500/20 text-slate-400';
           if (spd >= 55) return 'bg-emerald-500/20 text-emerald-400';
           if (spd >= 35) return 'bg-amber-500/20 text-amber-400';
           return 'bg-rose-500/20 text-rose-400';
         };
 
         const getStatusText = (spd) => {
+          if (spd === null) return '無資料';
           if (spd >= 55) return '順暢';
           if (spd >= 35) return '車多';
           return '壅塞';
         };
 
         const getSpeedColor = (spd) => {
+          if (spd === null) return 'text-slate-400';
           if (spd >= 55) return 'text-emerald-400';
           if (spd >= 35) return 'text-amber-400';
           return 'text-rose-400';
+        };
+
+        const getBarColor = (spd) => {
+          if (spd === null) return 'bg-slate-600';
+          if (spd >= 55) return 'bg-emerald-500';
+          if (spd >= 35) return 'bg-amber-500';
+          return 'bg-rose-500';
         };
 
         const handleImgError = (e) => {
@@ -451,24 +450,13 @@
 
         onMounted(() => {
           loadData();
-          setInterval(loadData, 30000); // 每 30 秒自動刷新
-          setInterval(() => { tick.value = Date.now(); }, 30000);
+          setInterval(loadData, 60000); // 每 60 秒重新讀取一次
         });
 
         return {
-          direction,
-          updateTimeDisplay,
-          currentSegments,
-          overallAvgSpeed,
-          totalEstimatedMinutes,
-          decision,
-          filteredNews,
-          highway5Info,
-          cctvList,
-          getStatusBadge,
-          getStatusText,
-          getSpeedColor,
-          handleImgError
+          direction, updateTimeDisplay, dataAgeMin, fetchAgeMin, fetchFailed, currentSegments, overallAvgSpeed,
+          totalEstimatedMinutes, decision, hasClosure, filteredNews, freeway5, cctvList, cctvAll, camSection, showAllCams, camSections,
+          getStatusBadge, getStatusText, getSpeedColor, getBarColor, handleImgError
         };
       },
       template: `
@@ -486,16 +474,19 @@
               <div class="text-right">
                 <div class="text-[11px] text-slate-400">公路局 TDX 即時資料</div>
                 <div class="text-xs font-mono text-emerald-400">{{ updateTimeDisplay }}</div>
+                <div v-if="fetchAgeMin > 30" class="text-[11px] text-amber-400">⚠️ 自動更新已 {{ fetchAgeMin }} 分鐘沒有執行</div>
+                <div v-else-if="fetchFailed" class="text-[11px] text-amber-400">⚠️ 最近一次抓取失敗，顯示的是舊資料</div>
+                <div v-else-if="dataAgeMin > 30" class="text-[11px] text-amber-400">⚠️ 公路局來源資料已 {{ dataAgeMin }} 分鐘未更新</div>
               </div>
               <div class="bg-slate-800/90 p-1 rounded-xl flex text-xs font-medium border border-slate-700/50">
-                <button 
-                  @click="direction = 'south'" 
+                <button
+                  @click="direction = 'south'"
                   :class="direction === 'south' ? 'bg-indigo-600 text-white shadow' : 'text-slate-400 hover:text-white'"
                   class="px-3 py-1.5 rounded-lg transition-all">
                   南下 宜蘭往花蓮
                 </button>
-                <button 
-                  @click="direction = 'north'" 
+                <button
+                  @click="direction = 'north'"
                   :class="direction === 'north' ? 'bg-indigo-600 text-white shadow' : 'text-slate-400 hover:text-white'"
                   class="px-3 py-1.5 rounded-lg transition-all">
                   北上 花蓮往宜蘭
@@ -507,7 +498,8 @@
           <section class="mt-6 glass-card rounded-2xl p-6 relative overflow-hidden border-indigo-500/20">
             <div class="flex flex-col md:flex-row justify-between gap-6">
               <div>
-                <div class="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-full text-xs font-semibold bg-emerald-500/20 text-emerald-300 mb-2">
+                <div class="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-full text-xs font-semibold mb-2"
+                     :class="hasClosure ? 'bg-rose-500/20 text-rose-300' : (overallAvgSpeed === null ? 'bg-slate-500/20 text-slate-300' : 'bg-emerald-500/20 text-emerald-300')">
                   <span>● 哨兵綜合決策</span>
                 </div>
                 <h2 class="text-2xl font-extrabold text-white">{{ decision.title }}</h2>
@@ -517,12 +509,12 @@
               <div class="flex gap-4 items-center bg-slate-900/80 p-4 rounded-xl border border-slate-800 shrink-0">
                 <div>
                   <div class="text-xs text-slate-400">蘇澳 ⇄ 崇德 車程</div>
-                  <div class="text-2xl font-bold font-mono text-emerald-400">{{ totalEstimatedMinutes }} <span class="text-xs text-slate-400">分</span></div>
+                  <div class="text-2xl font-bold font-mono text-emerald-400">{{ totalEstimatedMinutes ?? '--' }} <span class="text-xs text-slate-400">分</span></div>
                 </div>
                 <div class="w-px h-8 bg-slate-800"></div>
                 <div>
                   <div class="text-xs text-slate-400">全線均速</div>
-                  <div class="text-2xl font-bold font-mono text-white">{{ overallAvgSpeed }} <span class="text-xs text-slate-400">km/h</span></div>
+                  <div class="text-2xl font-bold font-mono text-white">{{ overallAvgSpeed ?? '--' }} <span class="text-xs text-slate-400">km/h</span></div>
                 </div>
               </div>
             </div>
@@ -544,7 +536,7 @@
               <span class="text-[11px] text-slate-500">速限 60-70 km/h</span>
             </div>
             <div class="grid grid-cols-1 md:grid-cols-3 gap-4">
-              <div v-for="seg in currentSegments" :key="seg.key" class="glass-card rounded-xl p-4.5 flex flex-col justify-between">
+              <div v-for="seg in currentSegments" :key="seg.key" class="glass-card rounded-xl p-4 flex flex-col justify-between">
                 <div class="flex justify-between items-start mb-2">
                   <div>
                     <span class="text-[11px] font-mono text-indigo-400">{{ seg.mileage }}</span>
@@ -557,37 +549,41 @@
 
                 <div class="flex items-baseline gap-2 mt-2">
                   <span class="text-3xl font-extrabold font-mono" :class="getSpeedColor(seg.speed)">
-                    {{ seg.speed > 0 ? seg.speed : '--' }}
+                    {{ seg.speed !== null ? seg.speed : '--' }}
                   </span>
                   <span class="text-xs text-slate-400">km/h (速限 {{ seg.limit }})</span>
                 </div>
 
                 <div class="w-full bg-slate-800/80 h-1.5 rounded-full mt-3 overflow-hidden">
-                  <div 
+                  <div
                     class="h-full rounded-full transition-all"
-                    :class="seg.speed >= 55 ? 'bg-emerald-500' : (seg.speed >= 35 ? 'bg-amber-500' : 'bg-rose-500')"
-                    :style="{ width: Math.min(100, (seg.speed / seg.limit) * 100) + '%' }">
+                    :class="getBarColor(seg.speed)"
+                    :style="{ width: seg.speed === null ? '0%' : Math.min(100, (seg.speed / seg.limit) * 100) + '%' }">
                   </div>
                 </div>
               </div>
             </div>
           </section>
 
-          <!-- 關鍵點位 CCTV 快照 -->
           <section class="mt-8">
             <div class="flex justify-between items-center mb-3">
-              <h3 class="text-xs font-semibold text-slate-400 uppercase tracking-wider">
-                關鍵點位 CCTV 快照・{{ direction === 'south' ? '南下（往花蓮）' : '北上（往宜蘭）' }}
-              </h3>
-              <span class="text-[11px] text-slate-500">每 30 秒自動刷新快照</span>
+              <h3 class="text-xs font-semibold text-slate-400 uppercase tracking-wider">關鍵點位 CCTV 快照・{{ direction === 'south' ? '南下（往花蓮）' : '北上（往宜蘭）' }}</h3>
+              <span class="text-[11px] text-slate-500">快照每分鐘更新・路況資料每 10 分鐘同步</span>
+            </div>
+
+            <div class="flex gap-2 overflow-x-auto pb-2 mb-3 text-xs">
+              <button v-for="s in camSections" :key="s.key" @click="camSection = s.key"
+                :class="camSection === s.key ? 'bg-indigo-600 text-white' : 'bg-slate-800 text-slate-400 hover:text-white'"
+                class="px-3 py-1.5 rounded-lg whitespace-nowrap transition-all">{{ s.label }}</button>
             </div>
 
             <div class="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-4 gap-3">
               <div v-for="cam in cctvList" :key="cam.id" class="glass-card rounded-xl overflow-hidden group">
                 <div class="relative bg-slate-900 aspect-video flex items-center justify-center overflow-hidden">
-                  <img 
-                    :src="cam.snapshotUrl" 
+                  <img
+                    :src="cam.snapshotUrl"
                     :alt="cam.title"
+                    loading="lazy"
                     class="w-full h-full object-cover group-hover:scale-105 transition-transform duration-300"
                     @error="handleImgError($event)"
                   />
@@ -601,23 +597,30 @@
                 </div>
               </div>
             </div>
+
+            <p v-if="cctvList.length === 0" class="text-xs text-slate-500 mt-2">目前沒有可顯示的影像，請稍後再試。</p>
+
+            <div v-if="camSection === 'all'" class="mt-4 text-center">
+              <button @click="showAllCams = !showAllCams" class="text-xs text-indigo-300 hover:text-white underline">
+                {{ showAllCams ? '只看重點點位' : '顯示全部 ' + cctvAll.length + ' 個點位' }}
+              </button>
+            </div>
           </section>
 
-          <!-- 北上專屬：國5銜接路況提醒卡片 -->
-          <section v-if="direction === 'north' && highway5Info" class="mt-6 glass-card rounded-2xl p-5 border-sky-500/20 bg-sky-950/20">
-            <div class="flex items-start gap-3">
-              <span class="text-xl">💡</span>
+          <section v-if="direction === 'north' && freeway5" class="mt-8">
+            <div class="glass-card rounded-xl p-4 flex gap-3 items-start border-sky-500/20">
+              <span class="text-lg">💡</span>
               <div>
-                <h4 class="text-sm font-bold text-sky-300">銜接國5路況提醒</h4>
-                <p class="text-xs text-slate-300 mt-1 leading-relaxed">
-                  目前蘇澳交流道<span v-if="highway5Info.queue === '0'">無排隊</span><span v-else>排隊 {{ highway5Info.queue }} 公里</span>，蘇澳至台北南港車程約 <span class="font-bold text-white">{{ highway5Info.time }}</span> 分鐘。
+                <div class="text-xs font-semibold text-sky-300 mb-1">銜接國5路況提醒</div>
+                <p class="text-sm text-slate-200 leading-relaxed">
+                  {{ freeway5.queueText }}，蘇澳至台北南港車程約 {{ freeway5.minutes }} 分鐘。
                 </p>
               </div>
             </div>
           </section>
 
           <footer class="mt-12 pt-6 border-t border-slate-800 text-xs text-slate-500 flex flex-col sm:flex-row justify-between items-center gap-4">
-            <p>資料直接自儲存庫即時同步・公路局開放資料介接</p>
+            <p>資料每 10 分鐘同步自公路局 TDX・僅供參考，請以現場標誌與官方公告為準</p>
             <div class="flex gap-4">
               <a href="https://168.thb.gov.tw/" target="_blank" class="hover:text-slate-300 underline">公路局 168 即時路況</a>
             </div>
