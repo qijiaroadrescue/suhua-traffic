@@ -22,6 +22,32 @@ async function call(url, options) {
   return res;
 }
 
+// ---- 只保留蘇花需要的資料，檔案變小、網站載入更快 ----
+
+// CCTV：只留台9線 100K～180K，且只留網站用得到的欄位
+function trimCctv(json) {
+  const KEEP = ["CCTVID", "RoadID", "RoadName", "RoadDirection", "LocationMile", "VideoImageURL", "SurveillanceDescription"];
+  const list = (json.CCTVs || [])
+    .filter((c) => {
+      if (c.RoadID !== "300090") return false;
+      const km = parseInt(String(c.LocationMile || ""), 10);
+      return km >= 100 && km <= 180;
+    })
+    .map((c) => Object.fromEntries(KEEP.map((k) => [k, c[k]])));
+  return { UpdateTime: json.UpdateTime, CCTVs: list };
+}
+
+// VD：只留台9線（VDID 含 0090），與網站的篩選條件一致
+function trimVd(json) {
+  const list = (json.VDLives || []).filter((v) => v.VDID && v.VDID.includes("0090"));
+  return { ...json, VDLives: list };
+}
+
+const TRIMMERS = {
+  cctv: { fn: trimCctv, count: (j) => j.CCTVs.length },
+  vd:   { fn: trimVd,   count: (j) => j.VDLives.length },
+};
+
 await mkdir("data", { recursive: true });
 const status = { updated: new Date().toISOString(), results: {} };
 
@@ -45,12 +71,31 @@ if (!tokenRes.ok) {
       const res = await call(`${BASE}${path}?$format=JSON&$top=5000`, {
         headers: { authorization: "Bearer " + access_token },
       });
-      if (res.ok) {
-        await writeFile(`data/${name}.json`, await res.text()); // 成功才覆蓋舊檔
-        status.results[name] = "ok";
-      } else {
+      if (!res.ok) {
         status.results[name] = res.status + " " + (await res.text()).slice(0, 300);
+        continue;
       }
+
+      const text = await res.text();
+      let json;
+      try {
+        json = JSON.parse(text);
+      } catch {
+        status.results[name] = "invalid json"; // 不是合法 JSON，保留舊檔
+        continue;
+      }
+
+      let out = text;
+      const trimmer = TRIMMERS[name];
+      if (trimmer) {
+        const trimmed = trimmer.fn(json);
+        const n = trimmer.count(trimmed);
+        status.results[name + "_kept"] = n;
+        if (n > 0) out = JSON.stringify(trimmed); // 篩完是空的就存原始資料，避免網站變空白
+      }
+
+      await writeFile(`data/${name}.json`, out); // 成功才覆蓋舊檔
+      status.results[name] = "ok";
     } catch (e) {
       status.results[name] = "error " + e;
     }
@@ -59,5 +104,7 @@ if (!tokenRes.ok) {
 
 await writeFile("data/status.json", JSON.stringify(status, null, 2));
 console.log(JSON.stringify(status, null, 2));
-const failed = Object.values(status.results).some((v) => v !== "ok");
-if (failed) process.exitCode = 1; // 有任何一項失敗就讓 Actions 顯示紅色 ✗
+
+// 只檢查抓取結果（忽略 xxx_kept 這類數字），有失敗就讓 Actions 顯示紅色 ✗
+const failed = Object.entries(status.results).some(([k, v]) => !k.endsWith("_kept") && v !== "ok");
+if (failed) process.exitCode = 1;
