@@ -1,11 +1,14 @@
 {
-  "updated": "2026-09-30T15:13:32.568Z",
+  "updated": "2026-09-30T15:20:29.774Z",
   "results": {
     "token": "ok",
-    "vd_kept": 179,
     "vd": "ok",
-    "cctv_kept": 97,
     "cctv": "ok",
     "news": "ok"
+  },
+  "kept": {
+    "vd": 179,
+    "cctv": 97,
+    "news": 7
   }
 }
