@@ -21,7 +21,10 @@ async function call(url, options) {
   return res;
 }
 
-// ---- 只保留蘇花需要的資料，檔案變小、網站載入更快 ----
+// 蘇花範圍：台9線 100K～180K
+const KM_MIN = 100;
+const KM_MAX = 180;
+const kmOf = (t) => { const m = String(t || "").match(/(\d{2,3})K/); return m ? parseInt(m[1], 10) : null; };
 
 // CCTV：只留台9線 100K～180K，且只留網站用得到的欄位
 function trimCctv(json) {
@@ -30,24 +33,30 @@ function trimCctv(json) {
     .filter((c) => {
       if (c.RoadID !== "300090") return false;
       const km = parseInt(String(c.LocationMile || ""), 10);
-      return km >= 100 && km <= 180;
+      return km >= KM_MIN && km <= KM_MAX;
     })
     .map((c) => Object.fromEntries(KEEP.map((k) => [k, c[k]])));
   return { UpdateTime: json.UpdateTime, CCTVs: list };
 }
 
-// VD：只留台9線（VDID 含 0090），與網站的篩選條件一致
+// VD：只留台9線（VDID 含 0090）且里程 100～180
 function trimVd(json) {
-  const list = (json.VDLives || []).filter((v) => v.VDID && v.VDID.includes("0090"));
+  const list = (json.VDLives || []).filter((v) => {
+    const m = (v.VDID || "").match(/-0090-(\d{3})-/);
+    return m && +m[1] >= KM_MIN && +m[1] <= KM_MAX;
+  });
   return { ...json, VDLives: list };
 }
 
-// News：保留與蘇花或台9線相關的通報
+// News：國5 路況專區（網站卡片要用）＋ 蘇花路段（台9線 100K～180K、台9丁、蘇花）
 function trimNews(json) {
   const list = (json.Newses || []).filter((item) => {
-    const title = item.Title || '';
-    const desc = item.Description || '';
-    return title.includes('台9') || title.includes('蘇花') || desc.includes('蘇澳') || desc.includes('崇德') || desc.includes('國5');
+    const title = item.Title || "";
+    if (title.includes("國5路況專區")) return true;
+    if (title.includes("台9丁") || title.includes("蘇花")) return true;
+    if (!title.includes("台9")) return false;
+    const km = kmOf(title);
+    return km !== null && km >= KM_MIN && km <= KM_MAX;
   });
   return { ...json, Newses: list };
 }
@@ -60,56 +69,62 @@ const TRIMMERS = {
 
 await mkdir("data", { recursive: true });
 
-// 將 kept 獨立出來，避免被誤認為錯誤結果
 const status = { updated: new Date().toISOString(), results: {}, kept: {} };
 
-const tokenRes = await call(TOKEN_URL, {
-  method: "POST",
-  headers: { "content-type": "application/x-www-form-urlencoded" },
-  body: new URLSearchParams({
-    grant_type: "client_credentials",
-    client_id: process.env.TDX_ID,
-    client_secret: process.env.TDX_SECRET,
-  }),
-});
-
-if (!tokenRes.ok) {
-  status.results.token = tokenRes.status + " " + (await tokenRes.text());
+if (!process.env.TDX_ID || !process.env.TDX_SECRET) {
+  status.results.token = "missing TDX_ID or TDX_SECRET";
 } else {
-  const { access_token } = await tokenRes.json();
-  status.results.token = "ok";
-  for (const [name, path] of Object.entries(ROUTES)) {
-    try {
-      const res = await call(`${BASE}${path}?$format=JSON&$top=5000`, {
-        headers: { authorization: "Bearer " + access_token },
-      });
-      if (!res.ok) {
-        status.results[name] = res.status + " " + (await res.text()).slice(0, 300);
-        continue;
-      }
+  const tokenRes = await call(TOKEN_URL, {
+    method: "POST",
+    headers: { "content-type": "application/x-www-form-urlencoded" },
+    body: new URLSearchParams({
+      grant_type: "client_credentials",
+      client_id: process.env.TDX_ID,
+      client_secret: process.env.TDX_SECRET,
+    }),
+  });
 
-      const text = await res.text();
-      let json;
+  if (!tokenRes.ok) {
+    status.results.token = tokenRes.status + " " + (await tokenRes.text()).slice(0, 300);
+  } else {
+    const { access_token } = await tokenRes.json();
+    status.results.token = "ok";
+    for (const [name, path] of Object.entries(ROUTES)) {
       try {
-        json = JSON.parse(text);
-      } catch {
-        status.results[name] = "invalid json"; // 不是合法 JSON，保留舊檔
-        continue;
-      }
+        const res = await call(`${BASE}${path}?$format=JSON&$top=5000`, {
+          headers: { authorization: "Bearer " + access_token },
+        });
+        if (!res.ok) {
+          status.results[name] = res.status + " " + (await res.text()).slice(0, 300);
+          continue;
+        }
 
-      let out = text;
-      const trimmer = TRIMMERS[name];
-      if (trimmer) {
+        const text = await res.text();
+        let json;
+        try {
+          json = JSON.parse(text);
+        } catch {
+          status.results[name] = "invalid json"; // 保留舊檔
+          continue;
+        }
+
+        const trimmer = TRIMMERS[name];
         const trimmed = trimmer.fn(json);
         const n = trimmer.count(trimmed);
-        status.kept[name] = n; // 筆數正確存放在 kept 物件中
-        if (n > 0) out = JSON.stringify(trimmed); // 篩完是空的就存原始資料，避免網站變空白
-      }
+        status.kept[name] = n;
 
-      await writeFile(`data/${name}.json`, out); // 成功才覆蓋舊檔
-      status.results[name] = "ok";
-    } catch (e) {
-      status.results[name] = "error " + e;
+        // 篩完是空的：視為異常，保留舊檔（不再存入未篩選的大檔）。
+        // 例外：news 本來就可能沒有通報
+        if (n === 0 && name !== "news") {
+          status.results[name] = "empty after trim";
+          continue;
+        }
+
+        await writeFile(`data/${name}.json`, JSON.stringify(trimmed)); // 成功才覆蓋舊檔
+        status.results[name] = "ok";
+      } catch (e) {
+        status.results[name] = "error " + e;
+      }
     }
   }
 }
@@ -117,6 +132,6 @@ if (!tokenRes.ok) {
 await writeFile("data/status.json", JSON.stringify(status, null, 2));
 console.log(JSON.stringify(status, null, 2));
 
-// 只檢查抓取結果，有失敗就讓 Actions 顯示紅色 ✗
-const failed = Object.entries(status.results).some(([k, v]) => v !== "ok");
+// 有失敗就讓 Actions 顯示紅色 ✗
+const failed = Object.values(status.results).some((v) => v !== "ok");
 if (failed) process.exitCode = 1;
