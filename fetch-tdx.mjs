@@ -10,15 +10,21 @@ const ROUTES = {
 
 const sleep = (ms) => new Promise((r) => setTimeout(r, ms));
 
-// 遇到 429 就等一下再試，最多 3 次
+// 網路逾時／429 都重試，最多 4 次；全部失敗才往外丟錯
 async function call(url, options) {
-  let res;
-  for (let i = 0; i < 3; i++) {
-    res = await fetch(url, options);
-    if (res.status !== 429) return res;
-    await sleep(15000);
+  let last;
+  for (let i = 0; i < 4; i++) {
+    try {
+      const res = await fetch(url, { ...options, signal: AbortSignal.timeout(30000) });
+      if (res.status !== 429) return res;
+      last = res;
+    } catch (e) {
+      last = e;
+    }
+    if (i < 3) await sleep(8000);
   }
-  return res;
+  if (last instanceof Response) return last;
+  throw last;
 }
 
 // 蘇花範圍：台9線 100K～180K
@@ -71,31 +77,46 @@ await mkdir("data", { recursive: true });
 
 const status = { updated: new Date().toISOString(), results: {}, kept: {} };
 
+let authProblem = false; // 金鑰／帳號問題（真的要處理）
+let httpFails = 0;       // TDX 有回應但回錯誤碼的次數
+
 if (!process.env.TDX_ID || !process.env.TDX_SECRET) {
   status.results.token = "missing TDX_ID or TDX_SECRET";
+  authProblem = true;
 } else {
-  const tokenRes = await call(TOKEN_URL, {
-    method: "POST",
-    headers: { "content-type": "application/x-www-form-urlencoded" },
-    body: new URLSearchParams({
-      grant_type: "client_credentials",
-      client_id: process.env.TDX_ID,
-      client_secret: process.env.TDX_SECRET,
-    }),
-  });
+  let accessToken = null;
+  try {
+    const tokenRes = await call(TOKEN_URL, {
+      method: "POST",
+      headers: { "content-type": "application/x-www-form-urlencoded" },
+      body: new URLSearchParams({
+        grant_type: "client_credentials",
+        client_id: process.env.TDX_ID,
+        client_secret: process.env.TDX_SECRET,
+      }),
+    });
+    if (!tokenRes.ok) {
+      status.results.token = tokenRes.status + " " + (await tokenRes.text()).slice(0, 300);
+      if ([400, 401, 403].includes(tokenRes.status)) authProblem = true;
+    } else {
+      accessToken = (await tokenRes.json()).access_token;
+      status.results.token = "ok";
+    }
+  } catch (e) {
+    // 連不上 TDX（逾時等）：保留舊資料，下一輪再試
+    status.results.token = "network error " + (e?.cause?.code || e);
+  }
 
-  if (!tokenRes.ok) {
-    status.results.token = tokenRes.status + " " + (await tokenRes.text()).slice(0, 300);
-  } else {
-    const { access_token } = await tokenRes.json();
-    status.results.token = "ok";
+  if (accessToken) {
     for (const [name, path] of Object.entries(ROUTES)) {
+      await sleep(1500); // 請求之間間隔，降低被限流的機會
       try {
         const res = await call(`${BASE}${path}?$format=JSON&$top=5000`, {
-          headers: { authorization: "Bearer " + access_token },
+          headers: { authorization: "Bearer " + accessToken },
         });
         if (!res.ok) {
           status.results[name] = res.status + " " + (await res.text()).slice(0, 300);
+          httpFails++;
           continue;
         }
 
@@ -113,17 +134,16 @@ if (!process.env.TDX_ID || !process.env.TDX_SECRET) {
         const n = trimmer.count(trimmed);
         status.kept[name] = n;
 
-        // 篩完是空的：視為異常，保留舊檔（不再存入未篩選的大檔）。
-        // 例外：news 本來就可能沒有通報
+        // 篩完是空的：視為異常，保留舊檔（news 本來就可能沒有通報）
         if (n === 0 && name !== "news") {
           status.results[name] = "empty after trim";
           continue;
         }
 
-        await writeFile(`data/${name}.json`, JSON.stringify(trimmed)); // 成功才覆蓋舊檔
+        await writeFile(`data/${name}.json`, JSON.stringify(trimmed));
         status.results[name] = "ok";
       } catch (e) {
-        status.results[name] = "error " + e;
+        status.results[name] = "network error " + (e?.cause?.code || e);
       }
     }
   }
@@ -132,6 +152,6 @@ if (!process.env.TDX_ID || !process.env.TDX_SECRET) {
 await writeFile("data/status.json", JSON.stringify(status, null, 2));
 console.log(JSON.stringify(status, null, 2));
 
-// 有失敗就讓 Actions 顯示紅色 ✗
-const failed = Object.values(status.results).some((v) => v !== "ok");
-if (failed) process.exitCode = 1;
+// 只有「金鑰有問題」或「TDX 三份資料都回錯誤碼」才讓 Actions 顯示紅色 ✗。
+// 偶爾連不上 TDX 屬暫時狀況：保留舊資料，網站在資料超過 20 分鐘時會自己顯示警告。
+if (authProblem || httpFails === 3) process.exitCode = 1;
