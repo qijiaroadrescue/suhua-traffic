@@ -106,7 +106,7 @@
     const { createApp, ref, computed, onMounted } = Vue;
 
     // ★ 部署 Cloudflare Worker 後，把這裡換成你的 Worker 網址
-  const REFRESH_API = "https://suhua-traffic-worker.qq9387036.workers.dev/";
+    const REFRESH_API = 'https://suhua-traffic-worker.qq9387036.workers.dev/';
 
     createApp({
       setup() {
@@ -124,6 +124,7 @@
         // 手動更新按鈕狀態
         const refreshing = ref(false);
         const refreshMsg = ref('');
+        const fetchTimeDisplay = ref('');
 
         const STALE_MIN = 30;          // 資料超過幾分鐘提示「可按更新」
         const MIN_GAP_MS = 10 * 60000; // 資料 10 分鐘內剛更新過就不再呼叫 Worker（需與 worker.js 冷卻一致）
@@ -210,6 +211,10 @@
           } catch (e) { ok = false; console.error(e); }
           try { newsRawData.value = (await loadJson('news')).Newses || []; } catch (e) { console.error(e); }
           try { cctvRawData.value = (await loadJson('cctv')).CCTVs || []; } catch (e) { console.error(e); }
+          try {
+            const s = await loadJson('status');
+            fetchTimeDisplay.value = new Date(s.updated).toLocaleTimeString('zh-TW', { hour: '2-digit', minute: '2-digit' });
+          } catch (e) {}
           loadFailed.value = !ok;
         };
 
@@ -239,7 +244,12 @@
               return;
             }
 
-            const res = await (await fetch(REFRESH_API, { method: 'POST' })).json();
+            let res;
+            try {
+              res = await (await fetch(REFRESH_API, { method: 'POST' })).json();
+            } catch (e) {
+              throw new Error('Worker 連不上');
+            }
 
             if (res.status === 'cooldown') {
               await loadData();
@@ -247,7 +257,7 @@
               refreshMsg.value = '剛有人更新過，已載入目前最新資料（約 ' + Math.max(1, Math.ceil(res.retryAfter / 60)) + ' 分鐘後可再更新）';
               return;
             }
-            if (res.status !== 'started') throw new Error('api ' + res.status);
+            if (res.status !== 'started') throw new Error('Worker 回應 ' + res.status + (res.code ? ' ' + res.code : '') + (res.detail ? '：' + res.detail : ''));
 
             refreshMsg.value = '已通知更新，約需 1～3 分鐘…';
             for (let i = 0; i < POLL_MAX; i++) {
@@ -262,7 +272,7 @@
             refreshMsg.value = '更新時間較久，請稍後再按一次';
           } catch (e) {
             console.error(e);
-            refreshMsg.value = '更新失敗，請稍後再試';
+            refreshMsg.value = '更新失敗（' + e.message + '）';
           } finally {
             refreshing.value = false;
           }
@@ -432,7 +442,7 @@
 
         return {
           direction, activeSection, showAllCCTV, updateTimeDisplay, isStale, loadFailed, ageText,
-          refreshing, refreshMsg, onRefresh,
+          refreshing, refreshMsg, onRefresh, fetchTimeDisplay,
           currentSegments, overallAvgSpeed, totalEstimatedMinutes, decision, toneBadge,
           filteredNews, closureNews, highway5Info, cctvList, totalCctvCount,
           getStatusBadge, getStatusText, getSpeedColor, getBarColor, handleImgError, setDirection
@@ -452,6 +462,7 @@
               <div class="text-right">
                 <div class="text-[11px] text-slate-400">公路局 TDX 資料時間</div>
                 <div class="text-xs font-mono" :class="isStale ? 'text-amber-400' : 'text-emerald-400'">{{ updateTimeDisplay }}<span v-if="ageText" class="text-slate-500">（{{ ageText }}）</span></div>
+                <div v-if="fetchTimeDisplay" class="text-[11px] text-slate-500">最後抓取 {{ fetchTimeDisplay }}</div>
               </div>
               <div class="bg-slate-800/90 p-1 rounded-xl flex text-xs font-medium border border-slate-700/50">
                 <button @click="setDirection('south')"
