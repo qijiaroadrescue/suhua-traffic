@@ -130,8 +130,39 @@ if (!process.env.TDX_ID || !process.env.TDX_SECRET) {
         }
 
         const trimmer = TRIMMERS[name];
-        const trimmed = trimmer.fn(json);
-        const n = trimmer.count(trimmed);
+        let trimmed = trimmer.fn(json);
+        let n = trimmer.count(trimmed);
+
+        // 診斷：記錄 TDX 實際回傳了什麼
+        const rawList = json.VDLives || json.CCTVs || json.Newses || [];
+        status.raw = status.raw || {};
+        status.raw[name] = {
+          tdxUpdateTime: json.UpdateTime || null,
+          total: rawList.length,
+          has0090: name === "vd" ? rawList.filter((v) => String(v.VDID || "").includes("-0090-")).length : undefined,
+          sample: name === "vd" ? rawList.slice(0, 3).map((v) => v.VDID) : undefined,
+        };
+
+        // VD 篩完是空的：等 20 秒重抓一次（只重抓這一支，最多一次）
+        if (name === "vd" && n === 0) {
+          await sleep(20000);
+          try {
+            const r2 = await call(`${BASE}${path}?$format=JSON&$top=5000`, {
+              headers: { authorization: "Bearer " + accessToken },
+            });
+            if (r2.ok) {
+              const j2 = JSON.parse(await r2.text());
+              const t2 = trimVd(j2);
+              const n2 = t2.VDLives.length;
+              status.raw.vd.retryTotal = (j2.VDLives || []).length;
+              status.raw.vd.retryKept = n2;
+              if (n2 > 0) { trimmed = t2; n = n2; }
+            }
+          } catch (e) {
+            status.raw.vd.retryError = String(e);
+          }
+        }
+
         status.kept[name] = n;
 
         // 篩完是空的：視為異常，保留舊檔（news 本來就可能沒有通報）
