@@ -1,0 +1,46 @@
+# 放在 .github/workflows/update-data.yml（取代原檔）
+# 變更：移除 schedule（原本每 30 分鐘備援），只保留 workflow_dispatch
+name: update-data
+
+on:
+  workflow_dispatch:
+
+permissions:
+  contents: write
+
+concurrency:
+  group: update-data
+  cancel-in-progress: false
+
+jobs:
+  run:
+    runs-on: ubuntu-24.04
+    timeout-minutes: 5
+
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 22
+
+      - name: Run TDX Fetch Script
+        run: node fetch-tdx.mjs
+        env:
+          TDX_ID: ${{ secrets.TDX_ID }}
+          TDX_SECRET: ${{ secrets.TDX_SECRET }}
+
+      - name: Commit and push changes
+        if: always()
+        run: |
+          git config --global user.name "data-bot"
+          git config --global user.email "bot@github.actions"
+          git add data/
+          git diff --staged --quiet && exit 0
+          git commit -m "update data [skip ci]"
+          for i in 1 2 3; do
+            if git pull --rebase -X theirs && git push; then exit 0; fi
+            git rebase --abort 2>/dev/null || true
+            sleep 5
+          done
+          exit 1
