@@ -1,5 +1,5 @@
 {
-  "updated": "2026-10-05T07:06:23.824Z",
+  "updated": "2026-10-05T07:54:22.477Z",
   "results": {
     "token": "ok",
     "vd": "empty after trim",
@@ -10,5 +10,27 @@
     "vd": 0,
     "cctv": 97,
     "news": 5
+  },
+  "raw": {
+    "vd": {
+      "tdxUpdateTime": "2026-10-05T15:53:38+08:00",
+      "total": 1613,
+      "has0090": 60,
+      "sample": [
+        "VD-11-0020-002-002",
+        "VD-11-0020-008-001",
+        "VD-11-0020-010-002"
+      ],
+      "retryTotal": 1613,
+      "retryKept": 0
+    },
+    "cctv": {
+      "tdxUpdateTime": "2026-10-05T03:43:25+08:00",
+      "total": 2382
+    },
+    "news": {
+      "tdxUpdateTime": "2026-10-05T15:53:43+08:00",
+      "total": 157
+    }
   }
 }
