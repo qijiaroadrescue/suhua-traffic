@@ -1,9 +1,9 @@
+# 放在 .github/workflows/update-data.yml（取代原檔）
+# 變更：移除 schedule（原本每 30 分鐘備援），只保留 workflow_dispatch
 name: update-data
 
 on:
   workflow_dispatch:
-  schedule:
-    - cron: '*/30 * * * *' # 備援；主要由 cron-job.org 觸發
 
 permissions:
   contents: write
