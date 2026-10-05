@@ -54,7 +54,7 @@
       {
         "@type": "Question",
         "name": "啟佳｜宜花東路況通的資料來源為何？",
-        "acceptedAnswer": { "@type": "Answer", "text": "資料來自交通部 TDX 運輸資料流通服務，包含公路局車輛偵測器（VD）、路況監視器（CCTV）及即時路況通報，約每 10 分鐘更新。" }
+        "acceptedAnswer": { "@type": "Answer", "text": "資料來自交通部 TDX 運輸資料流通服務，包含公路局車輛偵測器（VD）、路況監視器（CCTV）及即時路況通報，按下頁面上的「更新路況」按鈕即可取得最新資料。" }
       },
       {
         "@type": "Question",
@@ -73,7 +73,9 @@
     .glass-card { background: rgba(22, 27, 34, 0.8); backdrop-filter: blur(14px); border: 1px solid rgba(255, 255, 255, 0.08); }
     .pulse-dot { animation: pulse 2s cubic-bezier(0.4, 0, 0.6, 1) infinite; }
     @keyframes pulse { 0%, 100% { opacity: 1; } 50% { opacity: 0.3; } }
-    @media (prefers-reduced-motion: reduce) { .pulse-dot { animation: none; } }
+    @keyframes spin { to { transform: rotate(360deg); } }
+    .spin { animation: spin 1s linear infinite; display: inline-block; }
+    @media (prefers-reduced-motion: reduce) { .pulse-dot, .spin { animation: none; } }
   </style>
 </head>
 <body class="min-h-screen pb-16">
@@ -103,6 +105,9 @@
   <script>
     const { createApp, ref, computed, onMounted } = Vue;
 
+    // ★ 部署 Cloudflare Worker 後，把這裡換成你的 Worker 網址
+    const REFRESH_API = 'https://suhua-refresh.你的帳號.workers.dev/';
+
     createApp({
       setup() {
         const direction = ref('south');
@@ -116,7 +121,14 @@
         const newsRawData = ref([]);
         const cctvRawData = ref([]);
 
-        const STALE_MIN = 20; // 資料超過幾分鐘視為過期
+        // 手動更新按鈕狀態
+        const refreshing = ref(false);
+        const refreshMsg = ref('');
+
+        const STALE_MIN = 30;          // 資料超過幾分鐘提示「可按更新」
+        const MIN_GAP_MS = 10 * 60000; // 資料 10 分鐘內剛更新過就不再呼叫 Worker（需與 worker.js 冷卻一致）
+        const POLL_MS = 10000;         // 等待更新時，每 10 秒檢查一次
+        const POLL_MAX = 24;           // 最多檢查 24 次（4 分鐘；Pages 部署約需 1～3 分鐘）
 
         // 路段以「里程範圍」比對偵測器（VDID 第三段的 3 位數字）
         const segBase = [
@@ -179,12 +191,12 @@
         };
 
         const loadJson = async (name) => {
-          const res = await fetch(`./data/${name}.json?t=${Date.now()}`);
+          const res = await fetch(`./data/${name}.json?t=${Date.now()}`, { cache: 'no-store' });
           if (!res.ok) throw new Error(name + ' ' + res.status);
           return res.json();
         };
 
-        // 三份資料各自載入，一份失敗不影響其他
+        // 三份資料各自載入，一份失敗不影響其他（只讀靜態檔，不會消耗 TDX 點數）
         const loadData = async () => {
           let ok = true;
           try {
@@ -201,10 +213,75 @@
           loadFailed.value = !ok;
         };
 
-        // 資料是否過期（超過 STALE_MIN 分鐘，或根本沒載到）
+        // 讀取 status.json 的最後抓取時間（每次 Actions 執行都會更新）
+        const loadStatusMs = async () => {
+          try {
+            const s = await loadJson('status');
+            return Date.parse(s.updated) || 0;
+          } catch (e) { return 0; }
+        };
+
+        const sleep = (ms) => new Promise(r => setTimeout(r, ms));
+
+        // 按鈕：通知 Worker 觸發 Actions → 等 status.json 更新 → 重新載入畫面
+        const onRefresh = async () => {
+          if (refreshing.value) return;
+          refreshing.value = true;
+          refreshMsg.value = '';
+          try {
+            const before = await loadStatusMs();
+
+            // 剛更新過：只重新讀檔，連 Worker 都不用呼叫
+            if (before && Date.now() - before < MIN_GAP_MS) {
+              await loadData();
+              tick.value = Date.now();
+              refreshMsg.value = '資料剛更新過，已載入最新版本';
+              return;
+            }
+
+            const res = await (await fetch(REFRESH_API, { method: 'POST' })).json();
+
+            if (res.status === 'cooldown') {
+              await loadData();
+              tick.value = Date.now();
+              refreshMsg.value = '剛有人更新過，已載入目前最新資料（約 ' + Math.max(1, Math.ceil(res.retryAfter / 60)) + ' 分鐘後可再更新）';
+              return;
+            }
+            if (res.status !== 'started') throw new Error('api ' + res.status);
+
+            refreshMsg.value = '已通知更新，約需 1～3 分鐘…';
+            for (let i = 0; i < POLL_MAX; i++) {
+              await sleep(POLL_MS);
+              if ((await loadStatusMs()) > before) {
+                await loadData();
+                tick.value = Date.now();
+                refreshMsg.value = '✅ 已更新';
+                return;
+              }
+            }
+            refreshMsg.value = '更新時間較久，請稍後再按一次';
+          } catch (e) {
+            console.error(e);
+            refreshMsg.value = '更新失敗，請稍後再試';
+          } finally {
+            refreshing.value = false;
+          }
+        };
+
+        // 資料已經幾分鐘（用來提示是否建議按更新）
+        const ageMin = computed(() => vdUpdateMs.value ? Math.floor((tick.value - vdUpdateMs.value) / 60000) : null);
+
         const isStale = computed(() => {
           if (!vdUpdateMs.value) return true;
-          return (tick.value - vdUpdateMs.value) / 60000 > STALE_MIN;
+          return ageMin.value > STALE_MIN;
+        });
+
+        const ageText = computed(() => {
+          const m = ageMin.value;
+          if (m === null) return '';
+          if (m < 60) return m + ' 分鐘前';
+          if (m < 1440) return Math.floor(m / 60) + ' 小時前';
+          return Math.floor(m / 1440) + ' 天前';
         });
 
         // 各路段車速：只用狀態正常(Status 0)的偵測器；沒資料就是 null，不編數字
@@ -349,11 +426,13 @@
 
         onMounted(() => {
           loadData();
+          // 只重讀靜態檔與更新時間顯示，不會呼叫 TDX
           setInterval(() => { loadData(); tick.value = Date.now(); }, 30000);
         });
 
         return {
-          direction, activeSection, showAllCCTV, updateTimeDisplay, isStale, loadFailed,
+          direction, activeSection, showAllCCTV, updateTimeDisplay, isStale, loadFailed, ageText,
+          refreshing, refreshMsg, onRefresh,
           currentSegments, overallAvgSpeed, totalEstimatedMinutes, decision, toneBadge,
           filteredNews, closureNews, highway5Info, cctvList, totalCctvCount,
           getStatusBadge, getStatusText, getSpeedColor, getBarColor, handleImgError, setDirection
@@ -372,7 +451,7 @@
             <div class="flex items-center gap-3 w-full sm:w-auto justify-between sm:justify-end">
               <div class="text-right">
                 <div class="text-[11px] text-slate-400">公路局 TDX 資料時間</div>
-                <div class="text-xs font-mono" :class="isStale ? 'text-amber-400' : 'text-emerald-400'">{{ updateTimeDisplay }}</div>
+                <div class="text-xs font-mono" :class="isStale ? 'text-amber-400' : 'text-emerald-400'">{{ updateTimeDisplay }}<span v-if="ageText" class="text-slate-500">（{{ ageText }}）</span></div>
               </div>
               <div class="bg-slate-800/90 p-1 rounded-xl flex text-xs font-medium border border-slate-700/50">
                 <button @click="setDirection('south')"
@@ -385,8 +464,16 @@
             </div>
           </header>
 
+          <div class="mt-4 flex flex-wrap items-center gap-3">
+            <button @click="onRefresh" :disabled="refreshing"
+              class="inline-flex items-center gap-2 px-4 py-2.5 min-h-[44px] rounded-xl text-sm font-bold bg-amber-500 text-slate-900 hover:bg-amber-400 disabled:opacity-60 disabled:cursor-not-allowed transition">
+              <span :class="refreshing ? 'spin' : ''">🔄</span>{{ refreshing ? '更新中…' : '更新路況' }}
+            </button>
+            <span v-if="refreshMsg" class="text-xs text-slate-300" aria-live="polite">{{ refreshMsg }}</span>
+          </div>
+
           <div v-if="isStale" class="mt-4 text-xs bg-amber-500/10 border border-amber-500/30 text-amber-300 rounded-lg p-3">
-            ⚠️ {{ loadFailed ? '路況資料載入失敗' : '路況資料已超過 20 分鐘未更新' }}，下方數字可能不是最新，請以公路局 168 官方路況為準。
+            ⚠️ {{ loadFailed ? '路況資料載入失敗' : '目前顯示的路況資料已超過 30 分鐘' }}，下方數字可能不是最新，請按上方「更新路況」取得最新資料，並以公路局 168 官方路況為準。
           </div>
 
           <section class="mt-6 glass-card rounded-2xl p-6 relative overflow-hidden border-indigo-500/20">
@@ -497,7 +584,7 @@
           </section>
 
           <footer class="mt-12 pt-6 border-t border-slate-800 text-xs text-slate-500 flex flex-col sm:flex-row justify-between items-center gap-4">
-            <p>資料約每 10 分鐘更新・公路局開放資料（TDX）・僅供參考，請以現場交管與官方公告為準</p>
+            <p>按「更新路況」可取得最新資料・公路局開放資料（TDX）・僅供參考，請以現場交管與官方公告為準</p>
             <a href="https://168.thb.gov.tw/" target="_blank" rel="noopener" class="hover:text-slate-300 underline">公路局 168 即時路況</a>
           </footer>
         </div>
