@@ -476,9 +476,9 @@
           </header>
 
           <div class="mt-4 flex flex-wrap items-center gap-3">
-            <button @click="onRefresh" :disabled="refreshing"
-              class="inline-flex items-center gap-2 px-4 py-2.5 min-h-[44px] rounded-xl text-sm font-bold bg-amber-500 text-slate-900 hover:bg-amber-400 disabled:opacity-60 disabled:cursor-not-allowed transition">
-              <span :class="refreshing ? 'spin' : ''">🔄</span>{{ refreshing ? '更新中…' : '更新路況' }}
+            <button @click="onRefresh" :disabled="refreshing" :aria-label="refreshing ? '更新中' : '更新路況'" :title="refreshing ? '更新中…' : '更新路況'"
+              class="inline-flex items-center justify-center w-11 h-11 rounded-full bg-emerald-600 text-white hover:bg-emerald-500 disabled:opacity-60 disabled:cursor-not-allowed transition shadow">
+              <svg :class="refreshing ? 'spin' : ''" xmlns="http://www.w3.org/2000/svg" width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M21 12a9 9 0 0 0-9-9 9.75 9.75 0 0 0-6.74 2.74L3 8"/><path d="M3 3v5h5"/><path d="M3 12a9 9 0 0 0 9 9 9.75 9.75 0 0 0 6.74-2.74L21 16"/><path d="M16 16h5v5"/></svg>
             </button>
             <span v-if="refreshMsg" class="text-xs text-slate-300" aria-live="polite">{{ refreshMsg }}</span>
           </div>
