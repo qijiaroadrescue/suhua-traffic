@@ -26,8 +26,20 @@ const parseMile = (s) => { const m = String(s || "").match(/(\d+)\s*K\s*\+?\s*(\
 
 // 判斷是否台9丁線：路名、影像網址（T9D-）、說明，任一符合即算
 const isOld = (c) => /^台9丁/.test(String(c.RoadName || "")) || /\/T9D-/i.test(String(c.VideoImageURL || "")) || /台9丁/.test(String(c.SurveillanceDescription || ""));
-// 方向：影像網址有 (S)/(N) 時以它為準（TDX 的 RoadDirection 偶有與實際相反的資料）
-const dirOf = (c) => { const m = String(c.VideoImageURL || "").match(/\(([NS])\)\/snapshot/); return m ? m[1] : c.RoadDirection; };
+
+// 方向：影像網址有 (S)/(N) 或 (SW)/(NE) 時以它為準（TDX 的 RoadDirection 偶有與實際相反的資料）
+const dirOf = (c) => { 
+  const m = String(c.VideoImageURL || "").match(/\(([NSEW]+)\)\/snapshot/i); 
+  return m ? m[1].toUpperCase() : c.RoadDirection; 
+};
+
+// 標準化：NE/N/北向 -> N，SW/S/南向 -> S
+const normDir = (d) => { 
+  const s = String(d || "").trim().toUpperCase(); 
+  if (s.startsWith("N") || s.includes("北")) return "N"; 
+  if (s.startsWith("S") || s.includes("南")) return "S"; 
+  return s; 
+};
 
 function classify(c) {
   const km = parseMile(c.LocationMile);
@@ -69,7 +81,7 @@ all.forEach((c) => {
   cameras.push({
     id: c.CCTVID,
     road,
-    dir: dirOf(c),
+    dir: normDir(dirOf(c)),
     rawDir: c.RoadDirection,
     mile: String(c.LocationMile || "").replace(/\s/g, ""),
     km: Math.round(km * 1000) / 1000,
