@@ -1,0 +1,32 @@
+# 放在 .github/workflows/build-cctv-catalog.yml
+# 只能手動執行（Actions → Build CCTV Catalog → Run workflow），每次只呼叫 TDX 一次
+name: Build CCTV Catalog
+
+on:
+  workflow_dispatch:
+
+permissions:
+  contents: write
+
+jobs:
+  build:
+    runs-on: ubuntu-24.04
+    steps:
+      - uses: actions/checkout@v5
+      - uses: actions/setup-node@v5
+        with:
+          node-version: 22
+      - name: Build catalog
+        env:
+          TDX_ID: ${{ secrets.TDX_ID }}
+          TDX_SECRET: ${{ secrets.TDX_SECRET }}
+        run: node build-cctv-catalog.mjs
+      - name: Commit
+        if: always()
+        run: |
+          git config --global user.name "data-bot"
+          git config --global user.email "bot@github.actions"
+          git add data/
+          git diff --staged --quiet && exit 0
+          git commit -m "build cctv catalog [skip ci]"
+          git pull --rebase -X theirs && git push
