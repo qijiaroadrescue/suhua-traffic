@@ -2,7 +2,7 @@
 <html lang="zh-TW">
 <head>
   <meta charset="UTF-8" />
-  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover" />
   <title>啟佳｜宜花東路況通 — 蘇花公路／蘇花改即時路況｜即時車速、CCTV 快照、管制通報</title>
   <meta name="description" content="啟佳｜宜花東路況通提供台9線蘇花改、舊蘇花公路即時車速、CCTV 監視器快照與管制通報。南下北上一鍵查詢，出發前掌握花蓮宜蘭往返路況。" />
   <meta name="keywords" content="蘇花公路,蘇花改,台9線,台9丁,蘇花路況,蘇花CCTV,蘇花管制,落石坍方,花蓮路況,宜蘭花蓮交通,啟佳｜宜花東路況通" />
@@ -55,7 +55,7 @@
       {
         "@type": "Question",
         "name": "啟佳｜宜花東路況通的資料來源為何？",
-        "acceptedAnswer": { "@type": "Answer", "text": "資料來自交通部 TDX 運輸資料流通服務，包含公路局車輛偵測器（VD）、路況監視器（CCTV）及即時路況通報，按下頁面上的「更新路況」按鈕即可取得最新資料。" }
+        "acceptedAnswer": { "@type": "Answer", "text": "資料來自交通部 TDX 運輸資料流通服務，包含公路局車輛偵測器（VD）、路況監視器（CCTV）及即時路況通報，按下頁面上的「立即更新」按鈕即可取得最新資料。" }
       },
       {
         "@type": "Question",
@@ -77,6 +77,57 @@
     @keyframes spin { to { transform: rotate(360deg); } }
     .spin { animation: spin 1s linear infinite; display: inline-block; }
     @media (prefers-reduced-motion: reduce) { .pulse-dot, .spin { animation: none; } }
+
+    /* ===== 固定底部救援列 ===== */
+    body { padding-bottom: calc(120px + env(safe-area-inset-bottom, 0px)) !important; }
+    .rescue-bar {
+      position: fixed; left: 0; right: 0; bottom: 0; z-index: 50;
+      padding: 10px 12px calc(10px + env(safe-area-inset-bottom, 0px));
+      padding-left: calc(12px + env(safe-area-inset-left, 0px));
+      padding-right: calc(12px + env(safe-area-inset-right, 0px));
+      background: rgba(11, 15, 23, 0.92);
+      backdrop-filter: blur(14px); -webkit-backdrop-filter: blur(14px);
+      border-top: 1px solid rgba(255, 255, 255, 0.1);
+    }
+    .rescue-bar .inner { max-width: 56rem; margin: 0 auto; display: grid; grid-template-columns: 1.4fr 1fr 1fr; gap: 8px; }
+    .rescue-bar a {
+      display: flex; align-items: center; justify-content: center; gap: 6px;
+      min-height: 46px; padding: 0 6px; border-radius: 12px;
+      font-size: 0.85rem; font-weight: 700; color: #fff; text-decoration: none; text-align: center;
+    }
+    .rescue-bar .call { background: #e11d48; }
+    .rescue-bar .line { background: #06c755; }
+    .rescue-bar .site { background: #1e293b; border: 1px solid rgba(255,255,255,0.12); }
+
+    /* ===== 官方連結卡片 ===== */
+    .official-card { display: block; padding: 14px 16px; border-radius: 14px; background: #161b22; border: 1px solid rgba(255,255,255,0.08); text-decoration: none; transition: border-color .2s; }
+    .official-card:hover { border-color: rgba(99,102,241,.6); }
+
+    /* ===== 立即更新按鈕 ===== */
+    .refresh-btn {
+      display: inline-flex; align-items: center; justify-content: center; gap: 6px;
+      min-width: 118px; height: 50px; padding: 0 16px; border: 0; border-radius: 15px;
+      background: #059669; color: #fff; font-size: 0.9rem; font-weight: 700; cursor: pointer;
+      box-shadow: 0 8px 24px rgba(0, 0, 0, 0.45); transition: background .2s;
+    }
+    .refresh-btn:hover { background: #10b981; }
+    .refresh-btn:disabled { opacity: 0.75; cursor: not-allowed; }
+    .refresh-btn:focus-visible { outline: 2px solid #fff; outline-offset: 2px; }
+    /* 手機：固定在右下角、救援列上方 */
+    .fab-wrap {
+      position: fixed; z-index: 40;
+      right: calc(16px + env(safe-area-inset-right, 0px));
+      bottom: calc(86px + env(safe-area-inset-bottom, 0px));
+      display: flex; flex-direction: column; align-items: flex-end; gap: 6px;
+    }
+    .fab-time { font-size: 11px; color: #cbd5e1; background: rgba(11, 15, 23, 0.85); padding: 3px 8px; border-radius: 8px; }
+    .desk-refresh { display: none; align-items: center; gap: 12px; }
+    /* 桌機：放在「即時路況」標題右側 */
+    @media (min-width: 768px) {
+      .fab-wrap { display: none; }
+      .desk-refresh { display: flex; }
+      .desk-refresh .refresh-btn { height: 44px; box-shadow: none; }
+    }
   </style>
 </head>
 <body class="min-h-screen pb-16">
@@ -94,6 +145,15 @@
       </section>
     </main>
   </div>
+
+  <!-- 固定底部救援列（放在 #root 外面，網頁載入失敗時電話也一直在） -->
+  <nav class="rescue-bar" aria-label="道路救援快速聯絡">
+    <div class="inner">
+      <a class="call" href="tel:0937165037">📞 立即撥打 0937165037</a>
+      <a class="line" href="https://line.me/R/ti/p/%400937_165037" target="_blank" rel="noopener">💬 LINE</a>
+      <a class="site" href="https://qijiaroadrescue.com/" target="_blank" rel="noopener">🌐 官網</a>
+    </div>
+  </nav>
 
   <noscript>
     <div style="max-width:650px;margin:20px auto;padding:28px;font-family:sans-serif;color:#1e293b;background:#fff;border-radius:12px">
@@ -130,6 +190,8 @@
         const refreshing = ref(false);
         const refreshMsg = ref('');
         const fetchTimeDisplay = ref('');
+        const justUpdated = ref(false);        // 更新完成後短暫顯示「✓ 已更新」
+        const lastRefreshDisplay = ref('');    // 最後更新：HH:MM:SS
 
         const STALE_MIN = 30;          // 資料超過幾分鐘提示「可按更新」
         const MIN_GAP_MS = 10 * 60000; // 資料 10 分鐘內剛更新過就不再呼叫 Worker（需與 worker.js 冷卻一致）
@@ -198,6 +260,7 @@
             fetchTimeDisplay.value = new Date(s.updated).toLocaleTimeString('zh-TW', { hour: '2-digit', minute: '2-digit' });
           } catch (e) {}
           loadFailed.value = !ok;
+          if (ok) lastRefreshDisplay.value = new Date().toLocaleTimeString('zh-TW', { hour12: false });
         };
 
         // 讀取 status.json 的最後抓取時間（每次 Actions 執行都會更新）
@@ -210,10 +273,17 @@
 
         const sleep = (ms) => new Promise(r => setTimeout(r, ms));
 
-        // 按鈕：通知 Worker 觸發 Actions → 等 status.json 更新 → 重新載入畫面
+        // 更新成功：按鈕短暫顯示「✓ 已更新」
+        const markDone = () => {
+          justUpdated.value = true;
+          setTimeout(() => { justUpdated.value = false; }, 3000);
+        };
+
+        // 按鈕：通知 Worker 觸發 Actions → 等 status.json 更新 → 重新載入畫面（不重新整理整頁）
         const onRefresh = async () => {
           if (refreshing.value) return;
           refreshing.value = true;
+          justUpdated.value = false;
           refreshMsg.value = '';
           try {
             const before = await loadStatusMs();
@@ -223,6 +293,7 @@
               await loadData();
               tick.value = Date.now(); camTick.value = Date.now();
               refreshMsg.value = '資料剛更新過，已載入最新版本';
+              markDone();
               return;
             }
 
@@ -237,6 +308,7 @@
               await loadData();
               tick.value = Date.now(); camTick.value = Date.now();
               refreshMsg.value = '剛有人更新過，已載入目前最新資料（約 ' + Math.max(1, Math.ceil(res.retryAfter / 60)) + ' 分鐘後可再更新）';
+              markDone();
               return;
             }
             if (res.status !== 'started') throw new Error('Worker 回應 ' + res.status + (res.code ? ' ' + res.code : '') + (res.detail ? '：' + res.detail : ''));
@@ -248,6 +320,7 @@
                 await loadData();
                 tick.value = Date.now(); camTick.value = Date.now();
                 refreshMsg.value = '✅ 已更新';
+                markDone();
                 return;
               }
             }
@@ -430,7 +503,7 @@
 
         return {
           direction, activeSection, showAllCCTV, updateTimeDisplay, isStale, loadFailed, ageText,
-          refreshing, refreshMsg, onRefresh, fetchTimeDisplay,
+          refreshing, refreshMsg, onRefresh, fetchTimeDisplay, justUpdated, lastRefreshDisplay,
           currentSegments, overallAvgSpeed, totalEstimatedMinutes, decision, toneBadge,
           filteredNews, closureNews, highway5Info, cctvList, totalCctvCount,
           getStatusBadge, getStatusText, getSpeedColor, getBarColor, handleImgError, setDirection, road, setRoad, hasOld, secList
@@ -463,16 +536,20 @@
             </div>
           </header>
 
-          <div class="mt-4 flex flex-wrap items-center gap-3">
-            <button @click="onRefresh" :disabled="refreshing" :aria-label="refreshing ? '更新中' : '更新路況'" :title="refreshing ? '更新中…' : '更新路況'"
-              class="inline-flex items-center justify-center w-11 h-11 rounded-full bg-emerald-600 text-white hover:bg-emerald-500 disabled:opacity-60 disabled:cursor-not-allowed transition shadow">
-              <svg :class="refreshing ? 'spin' : ''" xmlns="http://www.w3.org/2000/svg" width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M21 12a9 9 0 0 0-9-9 9.75 9.75 0 0 0-6.74 2.74L3 8"/><path d="M3 3v5h5"/><path d="M3 12a9 9 0 0 0 9 9 9.75 9.75 0 0 0 6.74-2.74L21 16"/><path d="M16 16h5v5"/></svg>
-            </button>
-            <span v-if="refreshMsg" class="text-xs text-slate-300" aria-live="polite">{{ refreshMsg }}</span>
+          <div class="mt-5 flex items-center justify-between gap-3">
+            <h2 class="text-base font-bold text-white">🚦 即時路況</h2>
+            <div class="desk-refresh">
+              <span v-if="lastRefreshDisplay" class="text-xs text-slate-400">最後更新：{{ lastRefreshDisplay }}</span>
+              <button class="refresh-btn" @click="onRefresh" :disabled="refreshing" :aria-label="refreshing ? '更新中' : '立即更新路況'">
+                <span :class="refreshing ? 'spin' : ''" aria-hidden="true">{{ refreshing ? '⟳' : (justUpdated ? '✓' : '↻') }}</span>
+                <span>{{ refreshing ? '更新中…' : (justUpdated ? '已更新' : '立即更新') }}</span>
+              </button>
+            </div>
           </div>
+          <div v-if="refreshMsg" class="mt-2 text-xs text-slate-300" aria-live="polite">{{ refreshMsg }}</div>
 
           <div v-if="isStale" class="mt-4 text-xs bg-amber-500/10 border border-amber-500/30 text-amber-300 rounded-lg p-3">
-            ⚠️ {{ loadFailed ? '路況資料載入失敗' : '目前顯示的路況資料已超過 30 分鐘' }}，下方數字可能不是最新，請按上方「更新路況」取得最新資料，並以公路局 168 官方路況為準。
+            ⚠️ {{ loadFailed ? '路況資料載入失敗' : '目前顯示的路況資料已超過 30 分鐘' }}，下方數字可能不是最新，請按「立即更新」取得最新資料，並以公路局 168 官方路況為準。
           </div>
 
           <section class="mt-6 glass-card rounded-2xl p-6 relative overflow-hidden border-indigo-500/20">
@@ -583,10 +660,38 @@
             </div>
           </section>
 
-          <footer class="mt-12 pt-6 border-t border-slate-800 text-xs text-slate-500 flex flex-col sm:flex-row justify-between items-center gap-4">
-            <p>按「更新路況」可取得最新資料・公路局開放資料（TDX）・僅供參考，請以現場交管與官方公告為準</p>
-            <a href="https://168.thb.gov.tw/" target="_blank" rel="noopener" class="hover:text-slate-300 underline">公路局 168 即時路況</a>
+          <section class="mt-10">
+            <h3 class="text-base font-bold text-white mb-3">官方即時資訊</h3>
+            <div class="grid grid-cols-1 sm:grid-cols-3 gap-3">
+              <a class="official-card" href="https://www.1968services.tw/" target="_blank" rel="noopener">
+                <div class="font-bold text-white">1968 即時路況</div>
+                <div class="text-xs text-slate-400 mt-1">公路局</div>
+              </a>
+              <a class="official-card" href="https://www.thb.gov.tw/" target="_blank" rel="noopener">
+                <div class="font-bold text-white">公路局</div>
+                <div class="text-xs text-slate-400 mt-1">封路 / 預警公告</div>
+              </a>
+              <a class="official-card" href="https://www.cwa.gov.tw/V8/C/" target="_blank" rel="noopener">
+                <div class="font-bold text-white">中央氣象署</div>
+                <div class="text-xs text-slate-400 mt-1">雨量 / 颱風</div>
+              </a>
+            </div>
+          </section>
+
+          <footer class="mt-10 pt-6 border-t border-slate-800 text-xs text-slate-500 leading-relaxed space-y-3">
+            <p>啟佳｜宜花東路況通為民間彙整資訊，不代表官方公告；山區路段請留意落石、起霧與臨時管制。資料來源：公路局 TDX 開放資料。</p>
+            <p><strong class="text-slate-400">【免責聲明】</strong><br>本網站所載之所有資料、商標、標誌、圖像、短片、聲音檔案、連結及其他資料等（以下簡稱「資料」），僅供參考之用。本公司將盡力確保本網站資料的準確性，但對於該等資料的準確性、即時性或完整性，本公司不作任何明示或默示的保證。</p>
+            <p><strong class="text-slate-400">【著作權聲明】</strong><br>本官網之製作權（著作權）歸啟佳道路救援所有，請勿剽竊、轉載或擅自使用。</p>
+            <p class="text-slate-400">© 2026 啟佳道路救援 版權所有</p>
           </footer>
+
+          <div class="fab-wrap">
+            <div v-if="lastRefreshDisplay" class="fab-time">最後更新：{{ lastRefreshDisplay }}</div>
+            <button class="refresh-btn" @click="onRefresh" :disabled="refreshing" :aria-label="refreshing ? '更新中' : '立即更新路況'">
+              <span :class="refreshing ? 'spin' : ''" aria-hidden="true">{{ refreshing ? '⟳' : (justUpdated ? '✓' : '↻') }}</span>
+              <span>{{ refreshing ? '更新中…' : (justUpdated ? '已更新' : '立即更新') }}</span>
+            </button>
+          </div>
         </div>
       `
     }).mount('#root');
