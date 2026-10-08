@@ -1,5 +1,4 @@
-# 放在 .github/workflows/update.yml（取代原檔）
-# 變更：移除 schedule（原本每 30 分鐘備援），只保留 workflow_dispatch
+# 放在 .github/workflows/update.yml
 name: update-data
 
 on:
