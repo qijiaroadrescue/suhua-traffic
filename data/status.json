@@ -1,5 +1,5 @@
 {
-  "updated": "2026-11-24T03:00:51.897Z",
+  "updated": "2026-11-24T04:00:50.471Z",
   "results": {
     "token": "ok",
     "vd": "empty after trim",
@@ -13,7 +13,7 @@
   },
   "raw": {
     "vd": {
-      "tdxUpdateTime": "2026-11-24T10:59:07+08:00",
+      "tdxUpdateTime": "2026-11-24T11:59:07+08:00",
       "total": 1265,
       "has0090": 59,
       "kms": [
@@ -87,8 +87,8 @@
       "total": 2399
     },
     "news": {
-      "tdxUpdateTime": "2026-11-24T10:59:12+08:00",
-      "total": 153
+      "tdxUpdateTime": "2026-11-24T11:59:12+08:00",
+      "total": 152
     }
   }
 }
